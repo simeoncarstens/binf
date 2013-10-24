@@ -1,3 +1,9 @@
+"""
+StructureView
+
+A View of an AtomCollection
+"""
+
 from isd2.core.View import View
 from isd2.universe.AtomCollection import AtomCollection
 from isd2.DistanceMatrix import PairwiseDistanceMatrix
