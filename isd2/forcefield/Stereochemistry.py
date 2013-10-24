@@ -1,3 +1,11 @@
+"""
+Stereochemistry
+
+provides information about covalent bonds (in proteins)
+"""
+## TODO: remove hard-wired code
+## TODO: move test code to test folder
+
 from isd.Connectivity import load_connectivity
 from isd2.universe.Universe import Universe
 from isd2.core import Node
