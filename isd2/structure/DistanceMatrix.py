@@ -3,6 +3,7 @@ Classes to compute complete and incomplete distance matrices.
 """
 
 ## TODO: think about using MaskedArrays or sparse matrices
+## TODO: move test code somewhere else
 
 import numpy as np
 from scipy import spatial
