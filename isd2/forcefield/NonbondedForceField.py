@@ -1,3 +1,10 @@
+"""
+Currently, this is a fake non-bonded force field
+"""
+## TODO: move test code to test folder, implement prolsq force field that
+## TODO: takes an AtomCollection and sets up the necessary information such
+## TODO: as the types 
+
 from isd2.StructureView import StructureView
 from isd2.DistanceMatrix import ThresholdedDistanceMatrix as DistanceMatrix
 
