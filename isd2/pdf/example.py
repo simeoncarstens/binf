@@ -1,5 +1,10 @@
+"""
+Example illustrating the use of the Parameter class
+"""
+
 from csb.statistics.pdf import AbstractDensity, ParameterNotFoundError
 from csb.core import typedproperty, iterable
+
 from isd2.pdf.parameters import FancyGaussian, Parameter
 
 import numpy as np

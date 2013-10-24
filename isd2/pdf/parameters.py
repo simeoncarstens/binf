@@ -1,5 +1,7 @@
 """
 """
+## TODO: move test code somewhere else, complete documentation
+
 import numpy
 
 from abc import abstractmethod
@@ -258,7 +260,6 @@ class FancyGaussian(AbstractDensity):
         sigma = self.sigma
         
         return log(1.0 / sqrt(2 * pi * sigma ** 2)) - (x - mu) ** 2 / (2 * sigma ** 2)
-
 
 if __name__ == "__main__":
 
