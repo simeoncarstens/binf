@@ -3,11 +3,13 @@ Example illustrating the use of the Parameter class
 """
 
 from csb.statistics.pdf import AbstractDensity, ParameterNotFoundError
+from csb.statistics.pdf.parameterized import Parameter, ParameterValueError
 from csb.core import typedproperty, iterable
 
-from isd2.pdf.parameters import FancyGaussian, Parameter
+from isd2.pdf.parameters import FancyGaussian
 
 import numpy as np
+import numpy
 
 class Likelihood(AbstractDensity):
     """
@@ -85,6 +87,13 @@ class Coefficients(Parameter):
 
     def __len__(self):
         return len(self._value)
+
+    def _validate(self, value):
+
+        try:
+            return numpy.array(value)
+        except(ValueError, TypeError):
+            raise ParameterValueError(self.name, value)
 
 if __name__ == '__main__':
 
