@@ -8,7 +8,6 @@ from abc import ABCMeta, abstractmethod
 
 from isd2.model import AbstractModel
 from isd2.pdf import ParameterNotFoundError
-from isd2 import AbstractISDNamedDifferentiableCallable
 
 from csb.numeric import log, exp
 
@@ -27,8 +26,7 @@ class AbstractErrorModel(AbstractModel):
         return exp(self.log_prob(**variables))
 
 
-class AbstractDifferentiableErrorModel(AbstractErrorModel,
-                                       AbstractISDNamedDifferentiableCallable):
+class AbstractDifferentiableErrorModel(AbstractErrorModel):
 
     @abstractmethod
     def gradient(self, **variables):
@@ -50,7 +48,7 @@ class GaussianErrorModel(AbstractDifferentiableErrorModel):
         We need to think about a MockData class
         """
         
-        ss = self['sigma'] ** 2
+        ss = self['sigma'].value ** 2
         single_probs = exp(-0.5 * (mock_data[2] - mock_data[1]) ** 2 / ss) / numpy.sqrt(2.0 * numpy.pi * ss)
 
         return log(numpy.multiply.accumulate(single_probs)[-1])
@@ -61,7 +59,7 @@ class GaussianErrorModel(AbstractDifferentiableErrorModel):
             raise ParameterNotFoundError('GaussianErrorModel allows only for ' + 
                                          'one parameter called \'sigma\'')
 
-        value = float(value)
+        value = float(value.value)
         if value <= 0.0:
             raise ValueError('sigma has to be >= 0')
 
@@ -71,4 +69,4 @@ class GaussianErrorModel(AbstractDifferentiableErrorModel):
 
         """
         
-        return (mock_data[1] - mock_data[2]) / (self['sigma'] ** 2)
+        return (mock_data[1] - mock_data[2]) / (self['sigma'].value ** 2)

@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 
 from csb.numeric import exp
 
-from isd2 import AbstractISDNamedCallable, AbstractISDNamedDifferentiableCallable
+from isd2 import AbstractISDNamedCallable
 
 class AbstractLikelihood(AbstractISDNamedCallable):
 
@@ -39,8 +39,7 @@ class AbstractLikelihood(AbstractISDNamedCallable):
         return exp(self.log_prob(**variables))
 
 
-class AbstractDifferentiableLikelihood(AbstractLikelihood,
-                                       AbstractISDNamedDifferentiableCallable):
+class AbstractDifferentiableLikelihood(AbstractLikelihood):
 
     def gradient(self, **variables):
 
