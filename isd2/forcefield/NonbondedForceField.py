@@ -5,8 +5,8 @@ Currently, this is a fake non-bonded force field
 ## TODO: takes an AtomCollection and sets up the necessary information such
 ## TODO: as the types 
 
-from isd2.StructureView import StructureView
-from isd2.DistanceMatrix import ThresholdedDistanceMatrix as DistanceMatrix
+from isd2.structure.StructureView import StructureView
+from isd2.structure.DistanceMatrix import ThresholdedDistanceMatrix as DistanceMatrix
 
 import numpy as np
 

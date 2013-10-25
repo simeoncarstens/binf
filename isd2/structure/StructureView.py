@@ -6,7 +6,7 @@ A View of an AtomCollection
 
 from isd2.core.View import View
 from isd2.universe.AtomCollection import AtomCollection
-from isd2.DistanceMatrix import PairwiseDistanceMatrix
+from isd2.structure.DistanceMatrix import PairwiseDistanceMatrix
 from isd2 import DEBUG
 
 from csb.bio.io.mrc import DensityInfo
