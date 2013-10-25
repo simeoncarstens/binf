@@ -1,3 +1,7 @@
+'''
+nothing
+'''
+
 if __name__ == '__main__':
 
     from isd2.core.Viewable import Viewable

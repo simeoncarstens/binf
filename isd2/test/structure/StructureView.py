@@ -9,7 +9,7 @@ if __name__ == '__main__':
     from isd2.universe import universe_from_pdbentry
     from isd2.universe.Universe import Universe
     from isd2.universe.AtomCollection import AtomCollection
-    from isd2.StructureView import PairwiseDistances, DensityMap, density_info
+    from isd2.structure.StructureView import PairwiseDistances, DensityMap, density_info
     
     from scipy import ndimage
 
