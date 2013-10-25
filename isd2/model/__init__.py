@@ -56,10 +56,10 @@ class AbstractModel(AbstractISDNamedCallable):
     def set_params(self, *values, **named_params):
         
         for p, v in zip(self.parameters, values):
-            self[p] = v
+            self[p].set(v)
             
         for p in named_params:
-            self[p] = named_params[p]
+            self[p].set(named_params[p])
     
     @property
     def parameters(self):

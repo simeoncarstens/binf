@@ -7,6 +7,7 @@ import numpy
 
 from isd2.model.forwardmodels import AbstractDifferentiableForwardModel
 from isd2.model.errormodels import GaussianErrorModel
+from isd2.pdf import ParameterNotFoundError
 from isd2.pdf.posteriors import Posterior, DifferentiableConditionedPosterior
 from isd2.pdf.priors import AbstractPrior, AbstractDifferentiablePrior
 from isd2.likelihood import AbstractDifferentiableLikelihood
@@ -14,6 +15,7 @@ from isd2.likelihood import AbstractDifferentiableLikelihood
 from csb.numeric import log
 from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.propagators import RWMCPropagator
+from csb.statistics.pdf.parameterized import AbstractParameter, Parameter
 
 import matplotlib.pyplot as plt
 
@@ -105,14 +107,34 @@ class GaussianPrior(AbstractDifferentiablePrior):
 
     def log_prob(self, coeffs):
 
-        return -0.5 * sum((coeffs - self['mu']) ** 2) / (self['sigma'] ** 2) #- 0.5 * log(2.0 * numpy.pi)
+        return -0.5 * sum((coeffs - self['mu'].value) ** 2) / (self['sigma'].value ** 2) #- 0.5 * log(2.0 * numpy.pi)
 
     def gradient(self, coeffs):
 
-        return (coeffs - self['mu']) / (self['sigma'] ** 2)
+        return (coeffs - self['mu'].value) / (self['sigma'].value ** 2)
 
+    def _validate(self, param, value):
 
-    
+        if param != 'sigma' and param != 'mu':
+            raise ParameterNotFoundError('GaussianPrior allows only for ' + 
+                                         'one parameter called \'sigma\'')
+
+        if param == 'mu':
+            try:
+                numpy.array(value.value)
+            except TypeError:
+                raise ParameterValueError(param, value)
+
+        if param == 'sigma':
+            try:
+                value = float(value.value)
+            except TypeError:
+                raise ParameterValueError(param, value)
+            if value <= 0.0:
+                raise ParameterValueError(param, value, 'sigma has to be >= 0')
+            
+
+        
 class SamplePDF(object):
 
     def __init__(self, posterior):
@@ -151,6 +173,15 @@ def numerical_gradient(x, E, eps=1e-6):
     return res
 
 
+class ArrayParameter(AbstractParameter):
+
+    def _validate(self, value):
+        try:
+            return numpy.array(value)
+        except(TypeError, ValueError):
+            raise ParameterValueError(self.name, value)
+
+
 coeffs = numpy.array([2.0, -1.0, 1.0])
 bounds = [(1.0, 3.0), (-2.0, 0.0), (0.0, 2.0)]
 sigma = 2.0
@@ -162,7 +193,7 @@ data = numpy.array([(x, numpy.random.normal(loc=coeffs[0] * x ** 2 + coeffs[1] *
 start = {'coeffs': numpy.array([0.0, 0.0, 0.0]), 'sigma': 1.0}
 
 FWM = ForwardModel('polynom', data)
-EM = GaussianErrorModel('gaussian', start['sigma'])
+EM = GaussianErrorModel('gaussian', Parameter(start['sigma']))
 L = MyLikelihood(FWM, EM, data)
 
 if False:
@@ -207,9 +238,11 @@ def plot_hists(samples, coeffs):
 
 if True:
 
-    GP = GaussianPrior(mu=coeffs[:3], sigma=1.0)
+    mu = ArrayParameter(coeffs[:3], 'mu')
+    sigma = Parameter(1.0, 'sigma')
+    GP = GaussianPrior(mu, sigma)
     SP = SigmaPrior()
-    posti = DifferentiableConditionedPosterior([L], [SP, GP], fixed_parameters={'sigma': 2.0})
+    posti = DifferentiableConditionedPosterior([L], [SP, GP], fixed_parameters={'sigma': Parameter(2.0, 'sigma')})
 
     y = numpy.array([2.1, -2.0, 3.0, 2.0])
 

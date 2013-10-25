@@ -8,7 +8,7 @@ import numpy
 
 from csb.numeric import log, exp
 
-from isd2 import AbstractISDNamedDifferentiableCallable
+from isd2 import AbstractISDNamedCallable
 from isd2.pdf import AbstractISDPDF
 
 
@@ -38,7 +38,7 @@ class Posterior(AbstractISDPDF):
     def _update_error_model_parameters(self, params):
 
         for l in self._likelihoods:
-            l.error_model.set_params(**{x: params[x] for x in params 
+            l.error_model.set_params(**{x: params[x].value for x in params 
                                         if x in l.error_model.parameters})
 
     def _update_prior_parameters(self, params):
@@ -120,7 +120,7 @@ class ConditionedPosterior(Posterior):
 
 
 class DifferentiableConditionedPosterior(ConditionedPosterior,
-                                         AbstractISDNamedDifferentiableCallable):
+                                         AbstractISDNamedCallable):
 
     def _evaluate_gradients(self, **variables):
 

@@ -9,7 +9,7 @@ from abc import ABCMeta
 from isd2 import AbstractISDNamedCallable
 
 from csb.numeric import exp
-from csb.statistics.pdf import AbstractDensity
+from csb.statistics.pdf.parameterized import ParameterizedDensity
 
 
 class ParameterNotFoundError(AttributeError):
@@ -17,13 +17,13 @@ class ParameterNotFoundError(AttributeError):
     pass
 
 
-class AbstractISDPDF(AbstractDensity, AbstractISDNamedCallable):
+class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     __metaclass__ = ABCMeta
 
     def __init__(self, name='', **variables):
 
-        AbstractDensity.__init__(self)
+        ParameterizedDensity.__init__(self)
         AbstractISDNamedCallable.__init__(self, name)
 
     @property
