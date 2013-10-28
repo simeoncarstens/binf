@@ -10,7 +10,7 @@ from isd2.model.errormodels import GaussianErrorModel
 from isd2.pdf import ParameterNotFoundError
 from isd2.pdf.posteriors import Posterior, DifferentiablePosterior
 from isd2.pdf.priors import AbstractPrior, AbstractDifferentiablePrior
-from isd2.likelihood import AbstractDifferentiableLikelihood
+from isd2.pdf.likelihoods import AbstractDifferentiableLikelihood
 
 from csb.numeric import log
 from csb.statistics.samplers import State
@@ -212,12 +212,12 @@ sigma = 2.0
 
 data = numpy.array([(x, numpy.random.normal(loc=coeffs[0] * x ** 2 + coeffs[1] * x + coeffs[2], 
                                             scale=sigma)) 
-                    for x in numpy.linspace(-5, 5, 5)]).swapaxes(0,1)
+                    for x in numpy.linspace(-5, 5, 35)]).swapaxes(0,1)
         
 start = {'coeffs': numpy.array([0.0, 0.0, 0.0]), 'sigma': 1.0}
 
 FWM = ForwardModel('polynom', data)
-EM = GaussianErrorModel('gaussian', Parameter(start['sigma']))
+EM = GaussianErrorModel('gaussian', Parameter(start['sigma'], name='sigma'))
 L = MyLikelihood(FWM, EM, 'Likiliki')
 
 if False:
@@ -225,7 +225,7 @@ if False:
     P = ThetaPrior(bounds=bounds)
     SP = SigmaPrior()
 
-    posti = Posterior([L], [SP, P])
+    posti = Posterior({L.name: L}, {SP.name: SP, P.name: P})
     
     spdf = SamplePDF(posti)
 
@@ -262,8 +262,6 @@ def plot_hists(samples, coeffs):
 
 
 if True:
-
-    from csb.core import OrderedDict
     
     mu = ArrayParameter(coeffs[:3], 'mu')
     sigma = Parameter(1.0, 'sigma')
@@ -284,6 +282,6 @@ if True:
 
     from csb.statistics.samplers.mc.propagators import HMCPropagator
     
-    gen = HMCPropagator(pdf=pdf, gradient=pdf.gradient, timestep=0.09, nsteps=10)
+    gen = HMCPropagator(pdf=pdf, gradient=pdf.gradient, timestep=0.02, nsteps=20)
 
     samples = gen.generate(State(numpy.array([2.0, -1.0, 1.0])), length=2000, return_trajectory=True)
