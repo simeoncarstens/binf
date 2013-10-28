@@ -27,7 +27,6 @@ class AbstractISDNamedCallable(object):
 
         self._name = name
         self._variables = set()
-        self._frozen_variables = {}
         
     def _register_variable(self, name):
 
@@ -45,13 +44,17 @@ class AbstractISDNamedCallable(object):
         else:
             raise ValueError('\"' + name + '\": unknown variable name')
 
+    # @abstractmethod
+    # def conditional_factory(self, **fixed_params):
+    #     pass        
+
     @property
     def variables(self):
         return self._variables
 
     @property
     def name(self):
-        return _name
+        return self._name
 
     @abstractmethod
     def __call__(self, **variables):
