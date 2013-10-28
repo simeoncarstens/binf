@@ -15,8 +15,8 @@ class AbstractForwardModel(AbstractModel):
 
         self._data = data
 
+    @abstractmethod
     def __call__(self, structure):
-
         pass
 
     @property

@@ -42,6 +42,8 @@ class GaussianErrorModel(AbstractDifferentiableErrorModel):
         self._register('sigma')
         self['sigma'] = sigma
 
+        self._register_variable('mock data')
+
     def log_prob(self, mock_data):
         """
         Currently hacked and tailored for the example in sandbox_simeon.py.
@@ -66,7 +68,6 @@ class GaussianErrorModel(AbstractDifferentiableErrorModel):
     def gradient(self, mock_data):
         """
         Currently hacked and tailored for the example in sandbox_simeon.py
-
         """
         
         return (mock_data[1] - mock_data[2]) / (self['sigma'].value ** 2)
