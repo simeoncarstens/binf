@@ -27,6 +27,7 @@ class AbstractISDNamedCallable(object):
 
         self._name = name
         self._variables = set()
+        self._frozen_variables = {}
         
     def _register_variable(self, name):
 
@@ -54,6 +55,7 @@ class AbstractISDNamedCallable(object):
 
     @abstractmethod
     def __call__(self, **variables):
+        
         pass
 
 

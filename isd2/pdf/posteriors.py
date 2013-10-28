@@ -38,7 +38,7 @@ class Posterior(AbstractISDPDF):
     def _update_error_model_parameters(self, params):
 
         for l in self._likelihoods:
-            l.error_model.set_params(**{x: params[x].value for x in params 
+            l.error_model.set_params(**{x: params[x] for x in params 
                                         if x in l.error_model.parameters})
 
     def _update_prior_parameters(self, params):
@@ -59,15 +59,22 @@ class Posterior(AbstractISDPDF):
         self._update_error_model_parameters(params)
         self._update_prior_parameters(params)
 
+    def _get_component_variables_list(self):
+
+        return {c: c.variables for c in self.priors + self.likelihoods}
+
     def _evaluate_components(self, **model_parameters):
 
         self._update_nuisance_parameters(model_parameters)
         
         mps = model_parameters
         results = []
-        
-        for f in self._components:
-            single_result = f(**{x: mps[x] for x in mps if x in f.variables})
+
+        comp_vars = self._get_component_variables_list()
+
+        for c in comp_vars:
+
+            single_result = c(**{v: mps[v] for v in comp_vars[c]})
             results.append(single_result)
 
             if single_result < 1e-30:
@@ -98,25 +105,40 @@ class ConditionedPosterior(Posterior):
 
         self._fixed_parameters = fixed_parameters
         self._delete_variables(self._fixed_parameters)
+        self._setup_params(self._fixed_parameters)
+
+    def _setup_params(self, fixed_parameters):
+
+        sub_params = []
+
+        for l in self.likelihoods:
+            for p in l.forward_model.get_params():
+                sub_params.append(p)
+            for p in l.error_model.get_params():
+                sub_params.append(p)
+                
+        for p in self.priors:
+            for pprime in p.get_params():
+                sub_params.append(pprime)
+
+        unique_sub_params = {p.name: p for p in sub_params}
+        
+        params = {p: unique_sub_params[p].__class__(name=unique_sub_params[p].name)
+                  for p in unique_sub_params if p in fixed_parameters}
+
+        for p in params:
+            unique_sub_params[p].bind_to(params[p])
+            self._register(params[p].name)
+            self[p] = params[p]
 
     def _delete_variables(self, fixed_parameters):
         
         for p in fixed_parameters:
             self._delete_variable(p)
 
-    def _augment_parameters(self, parameters):
-
-        return parameters.update(self._fixed_parameters.copy())
-
     def log_prob(self, **variables):
 
-        augmented_parameters = self._augment_parameters(variables)
-
         return super(ConditionedPosterior, self).log_prob(**variables)
-
-    @property
-    def fixed_parameters(self):
-        return self._fixed_parameters
 
 
 class DifferentiableConditionedPosterior(ConditionedPosterior,
@@ -137,8 +159,6 @@ class DifferentiableConditionedPosterior(ConditionedPosterior,
         return single_gradients
 
     def gradient(self, **model_parameters):
-
-        self._augment_parameters(model_parameters)
 
         self._update_nuisance_parameters(model_parameters)
 

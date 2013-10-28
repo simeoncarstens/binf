@@ -15,7 +15,7 @@ from isd2.likelihood import AbstractDifferentiableLikelihood
 from csb.numeric import log
 from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.propagators import RWMCPropagator
-from csb.statistics.pdf.parameterized import AbstractParameter, Parameter
+from csb.statistics.pdf.parameterized import AbstractParameter, Parameter, ParameterValueError
 
 import matplotlib.pyplot as plt
 
@@ -34,7 +34,7 @@ class ForwardModel(AbstractDifferentiableForwardModel):
 
     def __call__(self, **variables):
 
-        coeffs = variables['coeffs']
+        coeffs = variables['coeffs'].value
 
         t1 = self.data[0] ** 2 * coeffs[0]
         t2 = self.data[0] * coeffs[1] + coeffs[2]
@@ -54,7 +54,7 @@ class ThetaPrior(AbstractPrior):
         super(ThetaPrior, self).__init__(name)
         
         for i, x in enumerate(bounds):
-            self._register(str(i))
+            self._register(x.name)
             
         self.set_params(*bounds)
 
@@ -62,11 +62,22 @@ class ThetaPrior(AbstractPrior):
         
     def log_prob(self, **variables):
 
-        coeffs = variables['coeffs']
-        theta_evals = [float(x > self.get_params()[i][0] and x < self.get_params()[i][1])
+        coeffs = variables['coeffs'].value
+        
+        theta_evals = [float(x > self.get_params()[i].value[0] and x < self.get_params()[i].value[1])
                        for i, x in enumerate(coeffs)]
         
         return log(numpy.multiply.accumulate(theta_evals)[-1])
+
+    def _validate(self, param, value):
+
+        if type(value.value) != tuple:
+            raise ParameterTypeError(param, value)
+        elif len(value.value) != 2:
+            raise ParameterValueError(param, value)
+        elif value.value[0] > value.value[1]:
+            raise ParameterValueError(param, value, 
+                                      "Lower bond must not be higher than the upper bound")
 
 
 class SigmaPrior(AbstractPrior):
@@ -80,8 +91,8 @@ class SigmaPrior(AbstractPrior):
     def log_prob(self, **variables):
 
         sigma = variables['sigma']
-            
-        return log(float(sigma > 0.0))
+
+        return log(float(sigma.value > 0.0))
             
             
 class MyLikelihood(AbstractDifferentiableLikelihood):
@@ -107,11 +118,11 @@ class GaussianPrior(AbstractDifferentiablePrior):
 
     def log_prob(self, coeffs):
 
-        return -0.5 * sum((coeffs - self['mu'].value) ** 2) / (self['sigma'].value ** 2) #- 0.5 * log(2.0 * numpy.pi)
+        return -0.5 * sum((coeffs.value - self['mu'].value) ** 2) / (self['sigma'].value ** 2) #- 0.5 * log(2.0 * numpy.pi)
 
     def gradient(self, coeffs):
 
-        return (coeffs - self['mu'].value) / (self['sigma'].value ** 2)
+        return (coeffs.value - self['mu'].value) / (self['sigma'].value ** 2)
 
     def _validate(self, param, value):
 
@@ -143,7 +154,7 @@ class SamplePDF(object):
         
     def log_prob(self, x):
 
-        return self.posterior.log_prob(coeffs=numpy.array(x[:3]), sigma=x[3])
+        return self.posterior.log_prob(coeffs=ArrayParameter(numpy.array(x[:3]), 'coeffs'), sigma=Parameter(x[3], 'sigma'))
     
     
 class CoeffsPDF(object):
@@ -154,11 +165,11 @@ class CoeffsPDF(object):
         
     def log_prob(self, x):
 
-        return self.posterior.log_prob(coeffs=x[:3])
+        return self.posterior.log_prob(coeffs=ArrayParameter(x[:3], 'coeffs'))
 
     def gradient(self, x, t=0.0):
 
-        return self.posterior.gradient(coeffs=x[:3])
+        return self.posterior.gradient(coeffs=ArrayParameter(x[:3], 'coeffs'))
 
 
 def numerical_gradient(x, E, eps=1e-6):
@@ -182,8 +193,21 @@ class ArrayParameter(AbstractParameter):
             raise ParameterValueError(self.name, value)
 
 
+class TupleParameter(AbstractParameter):
+
+    def _validate(self, value):
+        try:
+            return tuple(value)
+        except (TypeError, ValueError):
+            print self.name, value
+            raise ParameterValueError(self.name, value)
+        
+
+
 coeffs = numpy.array([2.0, -1.0, 1.0])
-bounds = [(1.0, 3.0), (-2.0, 0.0), (0.0, 2.0)]
+bounds = [TupleParameter((1.0, 3.0), 'bounds_a'), 
+          TupleParameter((-2.0, 0.0), 'bounds_b'), 
+          TupleParameter((0.0, 2.0), 'bounds_c')]
 sigma = 2.0
 
 data = numpy.array([(x, numpy.random.normal(loc=coeffs[0] * x ** 2 + coeffs[1] * x + coeffs[2], 
@@ -208,7 +232,7 @@ if False:
     
     gen = RWMCPropagator(spdf, stepsize=.02)
 
-    samples = gen.generate(State(numpy.array([2.0, -1.0, 1.0, 1.0])), length=5000, return_trajectory=True)
+    samples = gen.generate(State(numpy.array([2.0, -1.0, 1.0, 1.0])), length=15000, return_trajectory=True)
     
 def plot_hists(samples, coeffs):
 
@@ -228,10 +252,11 @@ def plot_hists(samples, coeffs):
     ax.add_subplot(223)
     plt.hist([x.position[2] for x in samples], range=histrange, bins=bins)
     plt.title('c='+str(coeffs[2]))
-    
-    # ax.add_subplot(224)
-    # plt.hist([x.position[3] for x in samples], range=histrange, bins=bins)
-    # plt.title('sigma='+str(sigma))
+
+    if len(samples[0].position) == 4:
+        ax.add_subplot(224)
+        plt.hist([x.position[3] for x in samples], range=histrange, bins=bins)
+        plt.title('sigma='+str(sigma))
     
     plt.show()
 

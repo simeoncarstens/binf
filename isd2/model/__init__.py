@@ -56,10 +56,10 @@ class AbstractModel(AbstractISDNamedCallable):
     def set_params(self, *values, **named_params):
         
         for p, v in zip(self.parameters, values):
-            self[p].set(v)
+            self[p].set(v.value)
             
         for p in named_params:
-            self[p].set(named_params[p])
+            self[p].set(named_params[p].value)
     
     @property
     def parameters(self):
@@ -68,7 +68,9 @@ class AbstractModel(AbstractISDNamedCallable):
         """
         return tuple(self._params)
 
+    def get_params(self):
+        return [self._params[name] for name in self.parameters]
+
     @abstractmethod
     def __call__(self, **variables):
-
         pass
