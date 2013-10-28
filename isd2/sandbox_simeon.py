@@ -8,7 +8,7 @@ import numpy
 from isd2.model.forwardmodels import AbstractDifferentiableForwardModel
 from isd2.model.errormodels import GaussianErrorModel
 from isd2.pdf import ParameterNotFoundError
-from isd2.pdf.posteriors import Posterior, DifferentiableConditionedPosterior
+from isd2.pdf.posteriors import Posterior, DifferentiablePosterior
 from isd2.pdf.priors import AbstractPrior, AbstractDifferentiablePrior
 from isd2.likelihood import AbstractDifferentiableLikelihood
 
@@ -126,9 +126,9 @@ class GaussianPrior(AbstractDifferentiablePrior):
 
     def _validate(self, param, value):
 
-        if param != 'sigma' and param != 'mu':
-            raise ParameterNotFoundError('GaussianPrior allows only for ' + 
-                                         'one parameter called \'sigma\'')
+        # if param != 'sigma' and param != 'mu':
+        #     raise ParameterNotFoundError('GaussianPrior allows only for ' + 
+        #                                  'one parameter called \'sigma\'')
 
         if param == 'mu':
             try:
@@ -218,7 +218,7 @@ start = {'coeffs': numpy.array([0.0, 0.0, 0.0]), 'sigma': 1.0}
 
 FWM = ForwardModel('polynom', data)
 EM = GaussianErrorModel('gaussian', Parameter(start['sigma']))
-L = MyLikelihood(FWM, EM, data)
+L = MyLikelihood(FWM, EM, 'Likiliki')
 
 if False:
 
@@ -263,11 +263,15 @@ def plot_hists(samples, coeffs):
 
 if True:
 
+    from csb.core import OrderedDict
+    
     mu = ArrayParameter(coeffs[:3], 'mu')
     sigma = Parameter(1.0, 'sigma')
     GP = GaussianPrior(mu, sigma)
     SP = SigmaPrior()
-    posti = DifferentiableConditionedPosterior([L], [SP, GP], fixed_parameters={'sigma': Parameter(2.0, 'sigma')})
+    fullposti = DifferentiablePosterior({L.name: L}, 
+                                        {SP.name: SP, GP.name: GP})
+    posti = fullposti.conditional_factory(sigma=Parameter(2.0, 'sigma'))
 
     y = numpy.array([2.1, -2.0, 3.0, 2.0])
 

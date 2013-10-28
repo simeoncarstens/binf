@@ -32,8 +32,27 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     @estimator.setter
     def estimator(self, strategy):
         pass
+    
     def estimate(self, data):
         raise NotImplementedError
+
+    def conditional_factory(self, **fixed_vars):
+
+        from copy import copy
+        
+        result = copy(self)
+
+        ## Does this break encapsulation?
+        
+        for v in fixed_vars:
+            result._delete_variable(v)
+            result._register(v)
+            result[v] = fixed_vars[v]
+
+        result.log_prob = lambda **variables: self.log_prob(**dict(variables, **fixed_vars))
+        result.__call__ = lambda **variables: self.__call__(**dict(variables, **fixed_vars))
+
+        return result
 
     def __call__(self, **variables):
 
