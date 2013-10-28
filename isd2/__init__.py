@@ -44,10 +44,6 @@ class AbstractISDNamedCallable(object):
         else:
             raise ValueError('\"' + name + '\": unknown variable name')
 
-    # @abstractmethod
-    # def conditional_factory(self, **fixed_params):
-    #     pass        
-
     @property
     def variables(self):
         return self._variables

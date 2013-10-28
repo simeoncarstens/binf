@@ -1,23 +1,40 @@
 """
 This module contains all likelihoods occuring in ISD.
-Technically, isd2.pdf is the wrong place for this module,
-because a likelihood isn't a pdf (and shouldn't be derived from one).
 """
+
+import numpy
+
+from abc import ABCMeta, abstractmethod
+
+from csb.numeric import exp
 
 from isd2.pdf import AbstractISDPDF
 
+class AbstractLikelihood(AbstractISDPDF):
 
-class AbstractISDLikelihood(AbstractISDPDF):
-    """
-    TODO: In fact, the likelihood isn't a PDF, which means it shouldn't be derived from one
-    """
+    __metaclass__ = ABCMeta
 
-    def __init__(self, forward_model, error_model):
+    @abstractmethod
+    def __init__(self, name, forward_model, error_model):
 
-        super(AbstractISDLikelihood, self).__init__()
-
+        super(AbstractLikelihood, self).__init__(name)
+        
         self._forward_model = forward_model
         self._error_model = error_model
+
+        self._setup_parameters()
+
+    def _setup_parameters(self):
+
+        for p in self._forward_model.get_params():
+            self._register(p.name)
+            self[p.name] = p.__class__(p.value, p.name)
+            p.bind_to(self[p.name])
+
+        for p in self._error_model.get_params():
+            self._register(p.name)
+            self[p.name] = p.__class__(p.value, p.name)
+            p.bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -27,14 +44,17 @@ class AbstractISDLikelihood(AbstractISDPDF):
     def error_model(self):
         return self._error_model
 
-    def log_prob(self, variables):
+    def log_prob(self, **variables):
+        
+        return self.error_model.log_prob(self.forward_model(**variables))
 
-        return self.error_model.log_prob(self.forward_model(variables['structure']))
 
-    def gradient(self, structure):
+class AbstractDifferentiableLikelihood(AbstractLikelihood):
 
-        pass
+    def gradient(self, **variables):
 
-    def _register_var(self, var):
-
-                self.variables.append(var)
+        l = self(**variables)
+        mock_data = self.forward_model(**variables)
+        dfm = self.forward_model.jacobi_matrix(**variables)
+        
+        return numpy.dot(dfm, self.error_model.gradient(mock_data))

@@ -39,28 +39,19 @@ class Posterior(AbstractISDPDF):
         for var in vars:
             self._register_variable(str(var)) 
 
-    def _update_error_model_parameters(self, params):
+    def _update_likelihood_parameters(self, params):
 
         for l in self._likelihoods.values():
-
-            l.error_model.set_params(**{x: params[x] for x in params 
-                                        if x in l.error_model.parameters})
+            l.set_params(**{x: params[x] for x in params if x in l.parameters})
 
     def _update_prior_parameters(self, params):
         
         for p in self._priors.values():
             p.set_params(**{x: params[x] for x in params if x in p.parameters})
-            
-    def _update_forward_model_parameters(self, params):
-
-        for l in self._likelihoods.values():
-            l.forward_model.set_params(**{x: params[x] for x in params 
-                                          if x in l.forward_model.parameters})
 
     def _update_nuisance_parameters(self, params):
 
-        self._update_forward_model_parameters(params)
-        self._update_error_model_parameters(params)
+        self._update_likelihood_parameters(params)
         self._update_prior_parameters(params)
 
     def _get_component_variables_list(self):
