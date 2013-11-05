@@ -36,11 +36,17 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def estimate(self, data):
         raise NotImplementedError
 
+    def clone(self):
+
+        from copy import copy
+
+        return copy(self)
+
     def conditional_factory(self, **fixed_vars):
 
         from copy import copy
         
-        result = copy(self)
+        result = self.clone()
 
         ## Does this break encapsulation?
         
