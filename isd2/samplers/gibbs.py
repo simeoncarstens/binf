@@ -155,7 +155,7 @@ if __name__ == '__main__':
     plt.plot()
 
     axis = ax.add_subplot(223)
-    h, xedges, yedges = numpy.histogram2d(xses, yses, bins=40)
+    h, xedges, yedges = numpy.histogram2d(xses, yses, bins=40, range=((-5, 5), (-5, 5)))
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-    plt.imshow(h, extent=extent)
+    plt.imshow(h, extent=extent, interpolation='nearest')
     plt.show()
