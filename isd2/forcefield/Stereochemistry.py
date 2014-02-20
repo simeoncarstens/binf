@@ -56,7 +56,7 @@ class Stereochemistry(object):
         
     def update(self, atoms):
         """
-        Setups of the linking and covalent bond information. Currently, this
+        Sets up the linking and covalent bond information. Currently, this
         only works for atoms that are part of the standard amino acids.
         """
         ## TODO: replace this part by csb.bio.nmr.AtomConnectivity
