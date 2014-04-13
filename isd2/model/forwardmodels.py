@@ -14,9 +14,9 @@ class AbstractForwardModel(AbstractModel):
     it for various things.
     '''
     
-    def __init__(self, name, data):
+    def __init__(self, name, data, parameters=None):
 
-        super(AbstractForwardModel, self).__init__(name)
+        super(AbstractForwardModel, self).__init__(name, parameters)
 
         self._data = data
 

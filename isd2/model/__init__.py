@@ -18,11 +18,16 @@ class AbstractModel(AbstractISDNamedCallable):
     involved.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, parameters=None):
 
         super(AbstractModel, self).__init__(name)
         
         self._params = OrderedDict()
+
+        for x in parameters:
+            self._register(x.name)
+            
+        self.set_params(*parameters)
 
     def _register(self, name):
         """
