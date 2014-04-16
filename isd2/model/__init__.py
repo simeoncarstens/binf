@@ -18,7 +18,7 @@ class AbstractModel(AbstractISDNamedCallable):
     involved.
     """
 
-    def __init__(self, name, parameters=None):
+    def __init__(self, name, parameters=[]):
 
         super(AbstractModel, self).__init__(name)
         

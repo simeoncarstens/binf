@@ -66,14 +66,14 @@ class Posterior(AbstractISDPDF):
         results = []
 
         comp_vars = self._get_component_variables_list()
-
+        
         for c in comp_vars:
 
-            single_result = c(**{v: mps[v] for v in comp_vars[c]})
+            single_result = c.log_prob(**{v: mps[v] for v in comp_vars[c]})
             results.append(single_result)
 
-            if single_result < 1e-30:
-                break
+            # if single_result < 1e-30:
+            #     break
 
         return results
 
@@ -112,7 +112,11 @@ class Posterior(AbstractISDPDF):
 
         single_results = self._evaluate_components(**model_parameters)
 
-        return log(numpy.multiply.accumulate(single_results)[-1])
+        return numpy.sum(single_results)
+        
+        # single_results = self._evaluate_components(**model_parameters)
+
+        # return log(numpy.multiply.accumulate(single_results)[-1])
         
     
     def log_prob(self, **model_parameters):
