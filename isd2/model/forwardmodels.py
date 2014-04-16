@@ -2,23 +2,24 @@
 This module contains all forward models.
 """
 
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
 from isd2.model import AbstractModel
 
 
 class AbstractForwardModel(AbstractModel):
+
     '''
     The data argument is nonsense. Forward models
     don't know about data. But for now, I'm misusing
     it for various things.
     '''
-    
-    def __init__(self, name, data, parameters=None):
+
+    __meta__ = ABCMeta
+
+    def __init__(self, name, parameters=[]):
 
         super(AbstractForwardModel, self).__init__(name, parameters)
-
-        self._data = data
 
     @abstractmethod
     def __call__(self, structure):

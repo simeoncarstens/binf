@@ -15,12 +15,13 @@ class AbstractLikelihood(AbstractISDPDF):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, name, forward_model, error_model):
+    def __init__(self, name, forward_model, error_model, data):
 
         super(AbstractLikelihood, self).__init__(name)
         
         self._forward_model = forward_model
         self._error_model = error_model
+        self._data = data
 
         self._setup_parameters()
 
@@ -44,6 +45,10 @@ class AbstractLikelihood(AbstractISDPDF):
     def error_model(self):
         return self._error_model
 
+    @property
+    def data(self):
+        return self._data
+
     def log_prob(self, **variables):
         
         return self.error_model.log_prob(self.forward_model(**variables))
@@ -56,5 +61,6 @@ class AbstractDifferentiableLikelihood(AbstractLikelihood):
         l = self(**variables)
         mock_data = self.forward_model(**variables)
         dfm = self.forward_model.jacobi_matrix(**variables)
+        emgrad = self.error_model.gradient(mock_data)
         
-        return numpy.dot(dfm, self.error_model.gradient(mock_data))
+        return numpy.dot(dfm, emgrad)
