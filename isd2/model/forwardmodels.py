@@ -22,16 +22,14 @@ class AbstractForwardModel(AbstractModel):
         super(AbstractForwardModel, self).__init__(name, parameters)
 
     @abstractmethod
-    def __call__(self, structure):
+    def __call__(self, model_parameters):
         pass
 
     @property
     def data(self):
         return self._data
 
-
-class AbstractDifferentiableForwardModel(AbstractForwardModel):
-
     @abstractmethod
-    def jacobi_matrix(self, **variables):
-        pass
+    def jacobi_matrix(self, **model_parameters):
+
+        self._check_differentiability(**model_parameters)

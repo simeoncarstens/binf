@@ -11,11 +11,3 @@ from isd2.pdf import AbstractISDPDF
 class AbstractPrior(AbstractISDPDF):
 
     pass
-
-
-class AbstractDifferentiablePrior(AbstractPrior):
-
-    @abstractmethod
-    def gradient(self, **variables):
-
-        pass

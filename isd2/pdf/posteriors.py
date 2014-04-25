@@ -102,6 +102,7 @@ class Posterior(AbstractISDPDF):
             result[v] = fixed_vars[v]
 
         result.log_prob = lambda **variables: result._eval_log_prob(**dict(variables, **fixed_vars))
+        result.gradient = lambda **variables: self.gradient(**dict(variables, **fixed_vars))
 
         return result
 
@@ -113,11 +114,7 @@ class Posterior(AbstractISDPDF):
         single_results = self._evaluate_components(**model_parameters)
 
         return numpy.sum(single_results)
-        
-        # single_results = self._evaluate_components(**model_parameters)
 
-        # return log(numpy.multiply.accumulate(single_results)[-1])
-        
     
     def log_prob(self, **model_parameters):
         """
@@ -126,10 +123,6 @@ class Posterior(AbstractISDPDF):
 
         return self._eval_log_prob(**model_parameters)
 
-        # single_results = self._evaluate_components(**model_parameters)
-
-        # return log(numpy.multiply.accumulate(single_results)[-1])
-
     @property
     def likelihoods(self):
         return self._likelihoods
@@ -137,16 +130,6 @@ class Posterior(AbstractISDPDF):
     @property
     def priors(self):
         return self._priors
-
-
-class DifferentiablePosterior(Posterior, AbstractISDNamedCallable):
-
-    def conditional_factory(self, **fixed_vars):
-
-        result = super(DifferentiablePosterior, self).conditional_factory(**fixed_vars)
-        result.gradient = lambda **variables: self.gradient(**dict(variables, **fixed_vars))
-
-        return result
 
     def _evaluate_gradients(self, **variables):
 
@@ -162,10 +145,23 @@ class DifferentiablePosterior(Posterior, AbstractISDNamedCallable):
 
         return single_gradients
 
-    def gradient(self, **model_parameters):
+    def _eval_gradient(self, **model_parameters):
 
         self._update_nuisance_parameters(model_parameters)
-
         grad_evals = self._evaluate_gradients(**model_parameters)
 
         return numpy.sum(grad_evals, 0)
+    
+    def gradient(self, **model_parameters):
+
+        return self._eval_gradient(**model_parameters)
+
+
+class DifferentiablePosterior(Posterior, AbstractISDNamedCallable):
+
+    def conditional_factory(self, **fixed_vars):
+
+        result = super(DifferentiablePosterior, self).conditional_factory(**fixed_vars)
+
+        return result
+

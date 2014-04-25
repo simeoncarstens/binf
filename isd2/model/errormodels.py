@@ -25,15 +25,13 @@ class AbstractErrorModel(AbstractModel):
 
         return exp(self.log_prob(**variables))
 
-
-class AbstractDifferentiableErrorModel(AbstractErrorModel):
-
     @abstractmethod
     def gradient(self, **variables):
+
         pass
+    
 
-
-class GaussianErrorModel(AbstractDifferentiableErrorModel):
+class GaussianErrorModel(AbstractErrorModel):
 
     def __init__(self, name, sigma):
 

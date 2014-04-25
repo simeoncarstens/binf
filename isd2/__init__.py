@@ -27,8 +27,9 @@ class AbstractISDNamedCallable(object):
 
         self._name = name
         self._variables = set()
+        self._differentiable_variables = set()
         
-    def _register_variable(self, name):
+    def _register_variable(self, name, differentiable=False):
 
         if type(name) != str:
             raise ValueError('Variable name must be a string, not ' + type(name))
@@ -36,17 +37,25 @@ class AbstractISDNamedCallable(object):
             raise ValueError('Variable name \"' + name + '\" must be unique')
         else:
             self._variables.add(name)
+            if differentiable:
+                self._differentiable_variables.add(name)
   
     def _delete_variable(self, name):
 
         if name in self._variables:
             self._variables.remove(name)
+            if name in self.differentiable_variables:
+                self._differentiable_variables.remove(name)
         else:
             raise ValueError('\"' + name + '\": unknown variable name')
 
     @property
     def variables(self):
         return self._variables
+
+    @property
+    def differentiable_variables(self):
+        return self._differentiable_variables
 
     @property
     def name(self):
@@ -57,9 +66,14 @@ class AbstractISDNamedCallable(object):
         
         pass
 
+    def _check_differentiability(self, **variables):
 
-class AbstractISDNamedDifferentiableCallable(AbstractISDNamedCallable):
+        if len(variables.viewkeys() & set(self._differentiable_variables)) == 0:
+            msg = 'Function cannot be differentiated w.r.t. any of the variables '+variables
+            raise ValueError(msg)
 
-    @abstractmethod
+    # @abstractmethod
     def gradient(self, **variables):
+
         pass
+        
