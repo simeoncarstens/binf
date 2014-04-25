@@ -129,7 +129,8 @@ if __name__ == '__main__':
     pdf = Gauss2D(Parameter(k1, 'k1'), Parameter(k2, 'k2'))
     subsamplers = {'x': FakeSampler(k1, 'x'), 'y': FakeSampler(k2, 'y')}
 
-    gips = GibbsSampler(pdf, ISDState({'x': Parameter(5.0, 'x'), 'y': Parameter(2.0, 'y')}), subsamplers)
+    gipsstate = ISDState({'x': Parameter(5.0, 'x'), 'y': Parameter(2.0, 'y')})
+    gips = GibbsSampler(pdf, gipsstate, subsamplers)
 
     samples = []
 

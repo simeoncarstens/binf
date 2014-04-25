@@ -53,10 +53,9 @@ class AbstractLikelihood(AbstractISDPDF):
         
         return self.error_model.log_prob(self.forward_model(**variables))
 
-
-class AbstractDifferentiableLikelihood(AbstractLikelihood):
-
     def gradient(self, **variables):
+
+        super(AbstractLikelihood, self).gradient(**variables)
 
         l = self(**variables)
         mock_data = self.forward_model(**variables)
@@ -64,3 +63,4 @@ class AbstractDifferentiableLikelihood(AbstractLikelihood):
         emgrad = self.error_model.gradient(mock_data)
         
         return numpy.dot(dfm, emgrad)
+
