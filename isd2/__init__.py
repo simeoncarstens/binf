@@ -72,8 +72,7 @@ class AbstractISDNamedCallable(object):
             msg = 'Function cannot be differentiated w.r.t. any of the variables '+variables
             raise ValueError(msg)
 
-    # @abstractmethod
     def gradient(self, **variables):
 
-        pass
+        raise NotImplementedError
         

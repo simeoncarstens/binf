@@ -28,7 +28,7 @@ class GibbsSampler(AbstractSingleChainMC):
             fixed_vars = {x: self.state.variables[x] for x in self.state.variables
                           if not x == var}
             self._conditional_pdfs.update({var: self._pdf.conditional_factory(**fixed_vars)})
-            self.subsamplers[var]._pdf = self._conditional_pdfs[var]
+            self.subsamplers[var].pdf = self._conditional_pdfs[var]
 
     def _update_conditional_pdf_params(self):
 

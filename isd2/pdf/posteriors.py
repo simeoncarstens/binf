@@ -102,7 +102,7 @@ class Posterior(AbstractISDPDF):
             result[v] = fixed_vars[v]
 
         result.log_prob = lambda **variables: result._eval_log_prob(**dict(variables, **fixed_vars))
-        result.gradient = lambda **variables: self.gradient(**dict(variables, **fixed_vars))
+        result.gradient = lambda **variables: result._eval_gradient(**dict(variables, **fixed_vars))
 
         return result
 
@@ -155,13 +155,3 @@ class Posterior(AbstractISDPDF):
     def gradient(self, **model_parameters):
 
         return self._eval_gradient(**model_parameters)
-
-
-class DifferentiablePosterior(Posterior, AbstractISDNamedCallable):
-
-    def conditional_factory(self, **fixed_vars):
-
-        result = super(DifferentiablePosterior, self).conditional_factory(**fixed_vars)
-
-        return result
-
