@@ -35,7 +35,7 @@ class GibbsSampler(AbstractSingleChainMC):
         for pdf in self._conditional_pdfs.values():
             for param in pdf.parameters:
                 if param in self._state.variables.keys():
-                    pdf[param] = self._state.variables[param]
+                    pdf[param].set(self._state.variables[param])
         
     def _checkstate(self, state):
 
