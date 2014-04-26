@@ -23,19 +23,23 @@ class AbstractLikelihood(AbstractISDPDF):
         self._error_model = error_model
         self._data = data
 
-        self._setup_parameters()
+        fwm_params = {p.name: p for p in self._forward_model.get_params()}
+        em_params = {p.name: p for p in self._error_model.get_params()}
+        self._nuisance_params = dict(fwm_params, **em_params)
 
-    def _setup_parameters(self):
+    #     self._setup_parameters()
 
-        for p in self._forward_model.get_params():
-            self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name)
-            p.bind_to(self[p.name])
+    # def _setup_parameters(self):
 
-        for p in self._error_model.get_params():
-            self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name)
-            p.bind_to(self[p.name])
+    #     for p in self._forward_model.get_params():
+    #         self._register(p.name)
+    #         self[p.name] = p.__class__(p.value, p.name)
+    #         p.bind_to(self[p.name])
+
+    #     for p in self._error_model.get_params():
+    #         self._register(p.name)
+    #         self[p.name] = p.__class__(p.value, p.name)
+    #         p.bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -49,18 +53,31 @@ class AbstractLikelihood(AbstractISDPDF):
     def data(self):
         return self._data
 
+    def _split_variables(self, **variables):
+
+        return {v: variables[v] for v in variables if not v in self._nuisance_params},\
+               {v: variables[v] for v in variables if v in self._nuisance_params}
+
+    def _update_nuisance_parameters(self, **nuisance_params):
+
+        for p in nuisance_params:
+            self._nuisance_params[p].set(nuisance_params[p])
+
     def log_prob(self, **variables):
+
+        vois, nps = self._split_variables(**variables)
+        self._update_nuisance_parameters(**nps)
         
-        return self.error_model.log_prob(self.forward_model(**variables))
+        return self.error_model.log_prob(self.forward_model(**vois))
 
     def gradient(self, **variables):
 
-        super(AbstractLikelihood, self).gradient(**variables)
-
+        vois, nps = self._split_variables(**variables)
+        self._update_nuisance_parameters(**nps)
+        
         l = self(**variables)
-        mock_data = self.forward_model(**variables)
-        dfm = self.forward_model.jacobi_matrix(**variables)
+        mock_data = self.forward_model(**vois)
+        dfm = self.forward_model.jacobi_matrix(**vois)
         emgrad = self.error_model.gradient(mock_data)
         
         return numpy.dot(dfm, emgrad)
-

@@ -26,12 +26,24 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         ParameterizedDensity.__init__(self)
         AbstractISDNamedCallable.__init__(self, name)
 
+        self._var_param_types = {}
+
     @property
     def estimator(self):
         raise NotImplementedError
     @estimator.setter
     def estimator(self, strategy):
         pass
+
+    @property
+    def var_param_types(self):
+        '''
+        Empty by default, but for a conditional PDF to be built,
+        one has to add AbstractParameter subclasses suiting the variables.
+        '''
+        return self._var_param_types.copy()
+    def update_var_param_types(self, **values):
+        self._var_param_types.update(**values)
     
     def estimate(self, data):
         raise NotImplementedError
@@ -51,7 +63,10 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         for v in fixed_vars:
             result._delete_variable(v)
             result._register(v)
-            result[v] = fixed_vars[v]
+            if self.var_param_types[v]:
+                result[v] = self.var_param_types[v](fixed_vars[v], v)
+            else:
+                raise('Parameter type for variable "'+v+'" not defined')
 
         result.log_prob = lambda **variables: self.log_prob(**dict(variables, **fixed_vars))
         result.__call__ = lambda **variables: self.__call__(**dict(variables, **fixed_vars))

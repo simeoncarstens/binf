@@ -42,12 +42,20 @@ class Posterior(AbstractISDPDF):
     def _update_likelihood_parameters(self, params):
 
         for l in self._likelihoods.values():
-            l.set_params(**{x: params[x] for x in params if x in l.parameters})
+            for p in l.parameters:
+                ## likelihoods may have parameters which should not be sampled
+                if p in params:
+                    l[p].set(params[p])
+            # l.set_params(**{x: params[x] for x in params if x in l.parameters})
 
     def _update_prior_parameters(self, params):
         
         for p in self._priors.values():
-            p.set_params(**{x: params[x] for x in params if x in p.parameters})
+            for pm in p.parameters:
+                ## priors may have parameters which should not be sampled
+                if pm in params:
+                    p[pm].set(params[pm])
+            # p.set_params(**{x: params[x] for x in params if x in p.parameters})
 
     def _update_nuisance_parameters(self, params):
 
@@ -99,7 +107,10 @@ class Posterior(AbstractISDPDF):
         for v in fixed_vars:
             result._delete_variable(v)
             result._register(v)
-            result[v] = fixed_vars[v]
+            if self.var_param_types[v]:
+                result[v] = self.var_param_types[v](fixed_vars[v], v)
+            else:
+                raise('Parameter type for variable "'+v+'" not defined')
 
         result.log_prob = lambda **variables: result._eval_log_prob(**dict(variables, **fixed_vars))
         result.gradient = lambda **variables: result._eval_gradient(**dict(variables, **fixed_vars))
@@ -137,7 +148,7 @@ class Posterior(AbstractISDPDF):
         single_gradients = []
         
         for n, f in self._components.iteritems():
-            if len(f.variables) > 0:
+            if len(f.variables) > 0 and len(f.differentiable_variables) > 0:
                 single_result = f.gradient(**{x: vars[x] for x in vars 
                                               if x in f.variables})
 
