@@ -38,14 +38,12 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     def clone(self):
 
-        from copy import copy
+        from copy import deepcopy
 
-        return copy(self)
+        return deepcopy(self)
 
     def conditional_factory(self, **fixed_vars):
 
-        from copy import copy
-        
         result = self.clone()
 
         ## Does this break encapsulation?
