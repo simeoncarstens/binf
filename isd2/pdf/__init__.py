@@ -21,7 +21,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, name='', **variables):
+    def __init__(self, name=''):
 
         ParameterizedDensity.__init__(self)
         AbstractISDNamedCallable.__init__(self, name)

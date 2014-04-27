@@ -56,6 +56,10 @@ class GibbsSampler(AbstractSingleChainMC):
     def sample(self):
 
         for var in self._pdf.variables:
+            ## looks nice, but in practice bad: some variables are drawn using built-in
+            ## distributions and not the conditional pdf object stored in 
+            ## self._conditional_pdfs
+            ## We need a way to cleanly update the subsamplers
             self._update_conditional_pdf_params()
             new = self.subsamplers[var].sample()
             self._state.update_variables(**{var: new})
