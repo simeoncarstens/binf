@@ -72,7 +72,24 @@ class AbstractISDNamedCallable(object):
             msg = 'Function cannot be differentiated w.r.t. any of the variables '+variables
             raise ValueError(msg)
 
-    def gradient(self, **variables):
+    def _evaluate_gradient(self, **variables):
 
         raise NotImplementedError
-        
+
+    def gradient(self, **variables):
+
+        self._complete_variables(**variables)
+        result = self._evaluate_gradient(**variables)
+        self._reduce_variables(**variables)
+
+        return result
+    
+    def _complete_variables(self, **variables):
+
+        variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
+
+    def _reduce_variables(self, **variables):
+
+        for p in self.parameters:
+            if p in variables:
+                variables[p].pop()

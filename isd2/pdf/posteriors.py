@@ -20,24 +20,47 @@ class Posterior(AbstractISDPDF):
 
         self._likelihoods = likelihoods
         self._priors = priors
-        self._components = dict(self._priors, **self._likelihoods)
 
-        self._register_component_variables(self._get_component_variables())
+        self._setup_parameters()
+        self._components = dict(**self.priors)
+        self._components.update(**self.likelihoods)
+        self._register_component_variables(*self._get_component_variables())
 
+    def _setup_parameters(self):
+
+        for L in self.likelihoods.values():
+            for p in L.parameters:
+                if p not in self.parameters:
+                    self._register(p)
+                    self[p] = L[p].__class__(L[p].value, 
+                                             L[p].name)
+                    L[p].bind_to(self[p])
+
+        for P in self.priors.values():
+            for p in P.parameters:
+                if p not in self.parameters:
+                    self._register(p)
+                    self[p] = P[p].__class__(P[p].value, 
+                                             P[p].name)
+                    P[p].bind_to(self[p])
+    
     def _get_component_variables(self):
 
         vars = []
+        diff_vars = []
 
         for c in self._components:
             for v in self._components[c].variables:
                 vars.append(v)
+                if v in self._components[c].differentiable_variables:
+                    diff_vars.append(v)
 
-        return set(vars)
+        return set(vars), set(diff_vars)
 
-    def _register_component_variables(self, vars):
+    def _register_component_variables(self, vars, diff_vars):
 
         for var in vars:
-            self._register_variable(str(var)) 
+            self._register_variable(str(var), differentiable=var in diff_vars)
 
     def _update_likelihood_parameters(self, params):
 
@@ -76,63 +99,50 @@ class Posterior(AbstractISDPDF):
         comp_vars = self._get_component_variables_list()
         
         for c in comp_vars:
-
             single_result = c.log_prob(**{v: mps[v] for v in comp_vars[c]})
             results.append(single_result)
 
-            # if single_result < 1e-30:
-            #     break
-
         return results
 
-    def conditional_factory(self, **fixed_vars):
+    # def conditional_factory(self, **fixed_vars):
 
-        ## TODO: implement clone methods
-        from copy import deepcopy
+    #     ## TODO: implement clone methods
+    #     from copy import deepcopy
 
-        result = deepcopy(self)
+    #     result = deepcopy(self)
         
-        for n, p in self.priors.iteritems():
-            common_vars = {v: fixed_vars[v] for v in p.variables 
-                           if v in set(fixed_vars).intersection(set(p.variables))}
-            if len(common_vars) > 0:
-                result._priors[p.name] = p.conditional_factory(**common_vars)
+    #     for n, p in self.priors.iteritems():
+    #         common_vars = {v: fixed_vars[v] for v in p.variables 
+    #                        if v in set(fixed_vars).intersection(set(p.variables))}
+    #         if len(common_vars) > 0:
+    #             result._priors[p.name] = p.conditional_factory(**common_vars)
 
-        for n, l in self.likelihoods.iteritems():
-            common_vars = {v: fixed_vars[v] for v in l.variables
-                           if v in set(fixed_vars).intersection(set(l.variables))}
-            if len(common_vars) > 0:
-                result._likelihoods[l.name] = l.conditional_factory(**common_vars)
+    #     for n, l in self.likelihoods.iteritems():
+    #         common_vars = {v: fixed_vars[v] for v in l.variables
+    #                        if v in set(fixed_vars).intersection(set(l.variables))}
+    #         if len(common_vars) > 0:
+    #             result._likelihoods[l.name] = l.conditional_factory(**common_vars)
 
-        for v in fixed_vars:
-            result._delete_variable(v)
-            result._register(v)
-            if self.var_param_types[v]:
-                result[v] = self.var_param_types[v](fixed_vars[v], v)
-            else:
-                raise('Parameter type for variable "'+v+'" not defined')
+    #     result._setup_components_dict()
+        
+    #     for v in fixed_vars:
+    #         result._delete_variable(v)
+    #         result._register(v)
+    #         if self.var_param_types[v]:
+    #             result[v] = self.var_param_types[v](fixed_vars[v], v)
+    #         else:
+    #             raise('Parameter type for variable "'+v+'" not defined')
 
-        result.log_prob = lambda **variables: result._eval_log_prob(**dict(variables, **fixed_vars))
-        result.gradient = lambda **variables: result._eval_gradient(**dict(variables, **fixed_vars))
+    #     result.log_prob = lambda **variables: result._eval_log_prob(**dict(variables, **fixed_vars))
+    #     result.gradient = lambda **variables: result._eval_gradient(**dict(variables, **fixed_vars))
 
-        return result
+    #     return result
 
-    def _eval_log_prob(self, **model_parameters):
-        """
-        This is really bad. But so far it is needed to make the conditional_factory() work
-        """
+    def _evaluate_log_prob(self, **model_parameters):
 
         single_results = self._evaluate_components(**model_parameters)
 
         return numpy.sum(single_results)
-
-    
-    def log_prob(self, **model_parameters):
-        """
-        See _eval_log_prob()
-        """
-
-        return self._eval_log_prob(**model_parameters)
 
     @property
     def likelihoods(self):
@@ -156,13 +166,22 @@ class Posterior(AbstractISDPDF):
 
         return single_gradients
 
-    def _eval_gradient(self, **model_parameters):
+    def _evaluate_gradient(self, **model_parameters):
 
         self._update_nuisance_parameters(model_parameters)
         grad_evals = self._evaluate_gradients(**model_parameters)
 
         return numpy.sum(grad_evals, 0)
-    
-    def gradient(self, **model_parameters):
 
-        return self._eval_gradient(**model_parameters)
+    def clone(self):
+
+        copy = self.__class__({L: self.likelihoods[L].clone() for L in self.likelihoods},
+                              {P: self.priors[P].clone() for P in self.priors}, 
+                              self.name)
+
+        for p in self.parameters:
+            if not p in copy.parameters:
+                copy._register(p)
+                copy[p] = self[p].__class__(self[p].value, p)
+
+        return copy
