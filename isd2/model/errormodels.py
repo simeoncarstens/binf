@@ -16,19 +16,10 @@ class AbstractErrorModel(AbstractModel):
 
     __metaclass__ = ABCMeta
     
-    @abstractmethod
-    def log_prob(self, mock_data):
-
-        pass
-
     def __call__(self, **variables):
 
         return exp(self.log_prob(**variables))
 
-    @abstractmethod
-    def gradient(self, **variables):
-
-        pass
     
 
 class GaussianErrorModel(AbstractErrorModel):

@@ -4,7 +4,7 @@ related to probability density functions and their parameters.
 """
 ## TODO: Some of this might end up in CSB at some point.
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 from isd2 import AbstractISDNamedCallable
 
@@ -21,10 +21,11 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, name=''):
+    def __init__(self, name='', **args):
 
         ParameterizedDensity.__init__(self)
         AbstractISDNamedCallable.__init__(self, name)
+        self._original_variables = self.variables.copy()
 
         self._var_param_types = {}
 
@@ -48,11 +49,11 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def estimate(self, data):
         raise NotImplementedError
 
-    def clone(self):
+    # def clone(self):
 
-        from copy import deepcopy
+    #     from copy import deepcopy
 
-        return deepcopy(self)
+    #     return deepcopy(self)
 
     def conditional_factory(self, **fixed_vars):
 
@@ -73,6 +74,29 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         return result
 
+    @abstractmethod
+    def _evaluate_log_prob(self, **variables):
+
+        pass
+
+    def log_prob(self, **variables):
+        self._complete_variables(**variables)
+        result = self._evaluate_log_prob(**variables)
+        self._reduce_variables(**variables)
+
+        return result
+
+    def gradient(self, **variables):
+        self._complete_variables(**variables)
+        result = self._evaluate_gradient(**variables)
+        self._reduce_variables(**variables)
+
+        return result
+
     def __call__(self, **variables):
 
         return exp(self.log_prob(**variables))
+
+    def clone(self):
+
+        pass      

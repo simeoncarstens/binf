@@ -31,7 +31,7 @@ class ISD2HMCSampler(HMCSampler):
 
         res = super(ISD2HMCSampler, self).sample()
 
-        return res.position
+        return res#.position
 
     @property
     def pdf(self):
@@ -40,9 +40,63 @@ class ISD2HMCSampler(HMCSampler):
     def pdf(self, value):
         wrapped_pdf = PDFWrapper(value)
         self._pdf = wrapped_pdf
+        self._update_gradients()
+        
+    def _update_gradients(self):
+
         self._gradient = wrapped_pdf.gradient
         self._propagator._gradient = wrapped_pdf.gradient
         self._propagator._integrator._gradient = wrapped_pdf.gradient
+
+    def update_pdf_params(self, **params):
+
+        for p in params:
+            self._pdf[p].set(params[p])
+
+        # self._update_gradients()
+
+
+from mpsampling import MPFastHMCSampler
+        
+class ISD2MPFastHMCSampler(MPFastHMCSampler):
+
+    def __init__(self, pdf, state, timestep, nsteps,
+                 integrator=FastLeapFrog, temperature=1.0):
+
+        wrapped_pdf = PDFWrapper(pdf)
+        super(ISD2MPFastHMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
+                                             timestep, nsteps, integrator, temperature)
+
+        self.mpinit()
+
+    def sample(self, sample_request):
+
+        res = super(ISD2MPFastHMCSampler, self).sample(sample_request)
+
+        # return res.position
+
+    @property
+    def pdf(self):
+        return self._pdf
+    @pdf.setter
+    def pdf(self, value):
+        wrapped_pdf = PDFWrapper(value)
+        self._pdf = wrapped_pdf
+        self._update_gradients()
+        
+    def _update_gradients(self):
+
+        self._gradient = self._pdf.gradient
+        self._propagator._gradient = self._pdf.gradient
+        try:
+            self._propagator._integrator._gradient = self._pdf.gradient
+        except AttributeError:
+            pass
+
+    def update_pdf_params(self, **params):
+
+        for p in params:
+            self._pdf[p].set(params[p])
     
 
 class HMCSampler2(object):
@@ -104,3 +158,9 @@ class HMCSampler2(object):
 
         return float(self.n_accepted) / self.n_total
 
+
+class HMCParameterInfo(object):
+
+    def __init__(self, **params):
+
+        self.__dict__.update(**params)

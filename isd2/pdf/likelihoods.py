@@ -27,19 +27,19 @@ class AbstractLikelihood(AbstractISDPDF):
         em_params = {p.name: p for p in self._error_model.get_params()}
         self._nuisance_params = dict(fwm_params, **em_params)
 
-    #     self._setup_parameters()
+        self._setup_parameters()
 
-    # def _setup_parameters(self):
+    def _setup_parameters(self):
 
-    #     for p in self._forward_model.get_params():
-    #         self._register(p.name)
-    #         self[p.name] = p.__class__(p.value, p.name)
-    #         p.bind_to(self[p.name])
+        for p in self._forward_model.get_params():
+            self._register(p.name)
+            self[p.name] = p.__class__(p.value, p.name)
+            p.bind_to(self[p.name])
 
-    #     for p in self._error_model.get_params():
-    #         self._register(p.name)
-    #         self[p.name] = p.__class__(p.value, p.name)
-    #         p.bind_to(self[p.name])
+        for p in self._error_model.get_params():
+            self._register(p.name)
+            self[p.name] = p.__class__(p.value, p.name)
+            p.bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -63,21 +63,40 @@ class AbstractLikelihood(AbstractISDPDF):
         for p in nuisance_params:
             self._nuisance_params[p].set(nuisance_params[p])
 
-    def log_prob(self, **variables):
+    def _evaluate_log_prob(self, **variables):
+
+        vois, nps = self._split_variables(**variables)
+        self._update_nuisance_parameters(**nps)
+
+        fwm_variables = {v: vois[v] for v in variables if v in self.forward_model.variables}
+        em_variables = {v: vois[v] for v in variables if v in self.error_model.variables}
+        mock_data = self.forward_model(**fwm_variables)
+        
+        return self.error_model.log_prob(mock_data=mock_data, **em_variables)
+
+    def _evaluate_gradient(self, **variables):
 
         vois, nps = self._split_variables(**variables)
         self._update_nuisance_parameters(**nps)
         
-        return self.error_model.log_prob(self.forward_model(**vois))
-
-    def gradient(self, **variables):
-
-        vois, nps = self._split_variables(**variables)
-        self._update_nuisance_parameters(**nps)
-        
-        l = self(**variables)
-        mock_data = self.forward_model(**vois)
-        dfm = self.forward_model.jacobi_matrix(**vois)
-        emgrad = self.error_model.gradient(mock_data)
+        fwm_variables = {v: vois[v] for v in variables if v in self.forward_model.variables}
+        em_variables = {v: vois[v] for v in variables if v in self.error_model.variables}
+        mock_data = self.forward_model(**fwm_variables)
+        dfm = self.forward_model.jacobi_matrix(**fwm_variables)
+        emgrad = self.error_model.gradient(mock_data=mock_data, **em_variables)
         
         return numpy.dot(dfm, emgrad)
+
+    def clone(self):
+
+        copy = self.__class__(self.name,
+                              self.forward_model.clone(),
+                              self.error_model.clone(),
+                              self.data)
+
+        for p in self.parameters:
+            if not p in copy.parameters:
+                copy._register(p)
+                copy[p] = self[p].__class__(self[p].value, p)
+
+        return copy
