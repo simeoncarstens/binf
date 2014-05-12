@@ -85,11 +85,20 @@ class AbstractISDNamedCallable(object):
         return result
     
     def _complete_variables(self, **variables):
+        '''
+        _complete_variables and _reduce_variables so far only work for classes
+        which both inherit from AbstractISDNamedCallable and can hold parameters
+        (that is, PDFs and models)
+        '''
 
+        ## at some point, this wouldn't update the variable dict in-place when called from a log_prob. Why?
+        
         variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
+
+        return variables
 
     def _reduce_variables(self, **variables):
 
         for p in self.parameters:
             if p in variables:
-                variables[p].pop()
+                variables.pop(p)

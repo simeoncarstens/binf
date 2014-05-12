@@ -28,18 +28,20 @@ class AbstractLikelihood(AbstractISDPDF):
         self._nuisance_params = dict(fwm_params, **em_params)
 
         self._setup_parameters()
+        
+        self._set_original_variables()
 
     def _setup_parameters(self):
 
         for p in self._forward_model.get_params():
             self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name)
-            p.bind_to(self[p.name])
+            self[p.name] = p.__class__(p.value, p.name, self[p.name])
+            # p.bind_to(self[p.name])
 
         for p in self._error_model.get_params():
             self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name)
-            p.bind_to(self[p.name])
+            self[p.name] = p.__class__(p.value, p.name, self[p.name])
+            # p.bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -96,6 +98,7 @@ class AbstractLikelihood(AbstractISDPDF):
 
         for p in self.parameters:
             if not p in copy.parameters:
+                print p
                 copy._register(p)
                 copy[p] = self[p].__class__(self[p].value, p)
 
