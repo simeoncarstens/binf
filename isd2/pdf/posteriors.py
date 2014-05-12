@@ -26,6 +26,8 @@ class Posterior(AbstractISDPDF):
         self._components.update(**self.likelihoods)
         self._register_component_variables(*self._get_component_variables())
 
+        self._set_original_variables()
+
     def _setup_parameters(self):
 
         for L in self.likelihoods.values():
@@ -33,16 +35,18 @@ class Posterior(AbstractISDPDF):
                 if p not in self.parameters:
                     self._register(p)
                     self[p] = L[p].__class__(L[p].value, 
-                                             L[p].name)
-                    L[p].bind_to(self[p])
+                                             L[p].name,
+                                             self[p])
+                    # L[p].bind_to(self[p])
 
         for P in self.priors.values():
             for p in P.parameters:
                 if p not in self.parameters:
                     self._register(p)
                     self[p] = P[p].__class__(P[p].value, 
-                                             P[p].name)
-                    P[p].bind_to(self[p])
+                                             P[p].name, 
+                                             self[p])
+                    # P[p].bind_to(self[p])
     
     def _get_component_variables(self):
 

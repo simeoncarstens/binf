@@ -25,9 +25,12 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         ParameterizedDensity.__init__(self)
         AbstractISDNamedCallable.__init__(self, name)
-        self._original_variables = self.variables.copy()
 
         self._var_param_types = {}
+
+    def _set_original_variables(self):
+
+        self._original_variables = self.variables.copy()
 
     @property
     def estimator(self):
@@ -49,18 +52,29 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def estimate(self, data):
         raise NotImplementedError
 
-    # def clone(self):
+    # def conditional_factory(self, **fixed_vars):
 
-    #     from copy import deepcopy
+    #     result = self.clone()
 
-    #     return deepcopy(self)
+    #     ## Does this break encapsulation?
+        
+    #     for v in fixed_vars:
+    #         result._delete_variable(v)
+    #         result._register(v)
+    #         if self.var_param_types[v]:
+    #             result[v] = self.var_param_types[v](fixed_vars[v], v)
+    #         else:
+    #             raise('Parameter type for variable "'+v+'" not defined')
+
+    #     result.log_prob = lambda **variables: self.log_prob(**dict(variables, **fixed_vars))
+    #     result.__call__ = lambda **variables: self.__call__(**dict(variables, **fixed_vars))
+
+    #     return result
 
     def conditional_factory(self, **fixed_vars):
 
         result = self.clone()
 
-        ## Does this break encapsulation?
-        
         for v in fixed_vars:
             result._delete_variable(v)
             result._register(v)
@@ -69,27 +83,30 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
             else:
                 raise('Parameter type for variable "'+v+'" not defined')
 
-        result.log_prob = lambda **variables: self.log_prob(**dict(variables, **fixed_vars))
-        result.__call__ = lambda **variables: self.__call__(**dict(variables, **fixed_vars))
-
-        return result
-
+        return result            
+    
     @abstractmethod
     def _evaluate_log_prob(self, **variables):
 
         pass
 
     def log_prob(self, **variables):
-        self._complete_variables(**variables)
-        result = self._evaluate_log_prob(**variables)
-        self._reduce_variables(**variables)
+
+        vs = self._complete_variables(**variables)
+        ## _complete_variables originally was supposed to update the variables
+        ## dict in-place, but that didn't work and return it. Now here the dict
+        ##  still wasn't updated. Don't understand why...
+        result = self._evaluate_log_prob(**vs)
+        variables = self._reduce_variables(**vs)
 
         return result
 
     def gradient(self, **variables):
-        self._complete_variables(**variables)
-        result = self._evaluate_gradient(**variables)
-        self._reduce_variables(**variables)
+
+        print self, variables.keys()
+        vs = self._complete_variables(**variables)
+        result = self._evaluate_gradient(**vs)
+        variables = self._reduce_variables(**vs)
 
         return result
 
