@@ -31,7 +31,7 @@ class ISD2HMCSampler(HMCSampler):
 
         res = super(ISD2HMCSampler, self).sample()
 
-        return res#.position
+        return res
 
     @property
     def pdf(self):
@@ -42,18 +42,10 @@ class ISD2HMCSampler(HMCSampler):
         self._pdf = wrapped_pdf
         self._update_gradients()
         
-    def _update_gradients(self):
-
-        self._gradient = wrapped_pdf.gradient
-        self._propagator._gradient = wrapped_pdf.gradient
-        self._propagator._integrator._gradient = wrapped_pdf.gradient
-
     def update_pdf_params(self, **params):
 
         for p in params:
-            self._pdf[p].set(params[p])
-
-        # self._update_gradients()
+            self._pdf.isd2pdf[p].set(params[p])
 
 
 from mpsampling import MPFastHMCSampler
@@ -61,20 +53,43 @@ from mpsampling import MPFastHMCSampler
 class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
     def __init__(self, pdf, state, timestep, nsteps,
-                 integrator=FastLeapFrog, temperature=1.0):
+                 integrator=FastLeapFrog, temperature=1.0, adapt_timestep=True):
 
         wrapped_pdf = PDFWrapper(pdf)
         super(ISD2MPFastHMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
                                              timestep, nsteps, integrator, temperature)
 
+        self.adapt_timestep = adapt_timestep
+        
         self.mpinit()
 
     def sample(self, sample_request):
 
-        res = super(ISD2MPFastHMCSampler, self).sample(sample_request)
+        from mpsampling import SamplerStats, AbstractMPSingleChainMC, NSampleResult
+        
+        numpy.random.seed()
+        self.state = sample_request.state
+        self.timestep = sample_request.timestep
 
-        # return res.position
+        # self._pdf.isd2pdf['k2'].set(sample_request.k2)
+        self.update_pdf_params(**sample_request.pdf_parameters)
 
+        samples = []
+        for i in range(sample_request.n):
+            sample = super(AbstractMPSingleChainMC, self).sample()
+            samples.append((sample, self._last_move_accepted))
+            
+        sample_result = NSampleResult(samples, SamplerStats(self._nmoves,
+                                                            [x[1] for x in samples]))
+
+        if self.adapt_timestep:
+            if self.last_move_accepted:
+                self.timestep *= 1.05
+            else:
+                self.timestep *= 0.95
+                
+        self.client_pipe_end.send(sample_result)
+        
     @property
     def pdf(self):
         return self._pdf
@@ -96,8 +111,7 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
     def update_pdf_params(self, **params):
 
         for p in params:
-            self._pdf[p].set(params[p])
-    
+            self._pdf.isd2pdf[p].set(params[p])
 
 class HMCSampler2(object):
     '''
@@ -124,7 +138,6 @@ class HMCSampler2(object):
         vn = self.variable_name
 
         def H(s):
-            # d = {vn: s.variables[
             return 0.5 * numpy.sum(s.momenta[vn] ** 2) \
                    - self.pdf.log_prob(vn=s.variables[vn].value)
 

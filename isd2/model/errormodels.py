@@ -7,19 +7,14 @@ import numpy
 from abc import ABCMeta, abstractmethod
 
 from isd2.model import AbstractModel
-from isd2.pdf import ParameterNotFoundError
+from isd2.pdf import ParameterNotFoundError, AbstractISDPDF
 
 from csb.numeric import log, exp
 
 
-class AbstractErrorModel(AbstractModel):
+class AbstractErrorModel(AbstractISDPDF, AbstractModel):
 
     __metaclass__ = ABCMeta
-    
-    def __call__(self, **variables):
-
-        return exp(self.log_prob(**variables))
-
     
 
 class GaussianErrorModel(AbstractErrorModel):
