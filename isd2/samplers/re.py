@@ -34,7 +34,7 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
 
         for s in self._samplers:
             for p in s._pdf.isd2pdf.parameters:
-                s._pdf.isd2pdf[p.name].bind_to(self._pdf[p.name])
+                s._pdf.isd2pdf[p].bind_to(self._pdf[p])
                 
     def _restore_schedule(self):
 
@@ -99,7 +99,8 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
         # except KeyError, ParameterNotFoundError:
         #     pass
 
-        req.pdf_parameters = {name: param.value for name, param in sampler._pdf.isd2pdf._params}
+        req.pdf_parameters = {name: param.value 
+                              for name, param in sampler._pdf.isd2pdf._params.iteritems()}
         
         return req
 
