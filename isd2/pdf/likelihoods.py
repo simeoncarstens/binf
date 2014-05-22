@@ -10,6 +10,9 @@ from csb.numeric import exp
 
 from isd2.pdf import AbstractISDPDF
 
+from scipy.sparse import coo_matrix
+
+
 class AbstractLikelihood(AbstractISDPDF):
 
     __metaclass__ = ABCMeta
@@ -36,12 +39,10 @@ class AbstractLikelihood(AbstractISDPDF):
         for p in self._forward_model.get_params():
             self._register(p.name)
             self[p.name] = p.__class__(p.value, p.name, self[p.name])
-            # p.bind_to(self[p.name])
 
         for p in self._error_model.get_params():
             self._register(p.name)
             self[p.name] = p.__class__(p.value, p.name, self[p.name])
-            # p.bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -87,7 +88,7 @@ class AbstractLikelihood(AbstractISDPDF):
         dfm = self.forward_model.jacobi_matrix(**fwm_variables)
         emgrad = self.error_model.gradient(mock_data=mock_data, **em_variables)
         
-        return numpy.dot(dfm, emgrad)
+        return dfm.dot(emgrad)
 
     def clone(self):
 
@@ -98,8 +99,29 @@ class AbstractLikelihood(AbstractISDPDF):
 
         for p in self.parameters:
             if not p in copy.parameters:
-                print p
                 copy._register(p)
                 copy[p] = self[p].__class__(self[p].value, p)
 
+        for v in copy.variables.difference(self.variables):
+            copy._delete_variable(v)
+
         return copy
+
+    def conditional_factory(self, **fixed_vars):
+
+        result = self.__class__(self.name,
+                                self.forward_model.clone(),
+                                self.error_model.conditional_factory(**fixed_vars),
+                                self.data)
+
+        for v in fixed_vars:
+            if v in result.variables:
+                result._delete_variable(v)
+                result._register(v)
+                if v in self.var_param_types:
+                    result[v] = self.var_param_types[v](fixed_vars[v], v)
+                else:
+                    raise ValueError('Parameter type for variable "'+v+'" not defined')
+
+        return result            
+

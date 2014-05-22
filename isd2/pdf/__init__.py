@@ -52,36 +52,18 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def estimate(self, data):
         raise NotImplementedError
 
-    # def conditional_factory(self, **fixed_vars):
-
-    #     result = self.clone()
-
-    #     ## Does this break encapsulation?
-        
-    #     for v in fixed_vars:
-    #         result._delete_variable(v)
-    #         result._register(v)
-    #         if self.var_param_types[v]:
-    #             result[v] = self.var_param_types[v](fixed_vars[v], v)
-    #         else:
-    #             raise('Parameter type for variable "'+v+'" not defined')
-
-    #     result.log_prob = lambda **variables: self.log_prob(**dict(variables, **fixed_vars))
-    #     result.__call__ = lambda **variables: self.__call__(**dict(variables, **fixed_vars))
-
-    #     return result
-
     def conditional_factory(self, **fixed_vars):
 
         result = self.clone()
 
         for v in fixed_vars:
-            result._delete_variable(v)
-            result._register(v)
-            if self.var_param_types[v]:
-                result[v] = self.var_param_types[v](fixed_vars[v], v)
-            else:
-                raise('Parameter type for variable "'+v+'" not defined')
+            if v in result.variables:
+                result._delete_variable(v)
+                result._register(v)
+                if v in self.var_param_types:
+                    result[v] = self.var_param_types[v](fixed_vars[v], v)
+                else:
+                    raise ValueError('Parameter type for variable "'+v+'" not defined')
 
         return result            
     
@@ -103,7 +85,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     def gradient(self, **variables):
 
-        print self, variables.keys()
         vs = self._complete_variables(**variables)
         result = self._evaluate_gradient(**vs)
         variables = self._reduce_variables(**vs)
