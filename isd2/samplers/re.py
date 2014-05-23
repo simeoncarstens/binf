@@ -94,10 +94,6 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
         from mpsampling import NSampleRequest
         
         req = NSampleRequest(sampler.state, n, sampler.timestep)
-        # try:
-        #     req.k2 = self._pdf['k2'].value if isinstance(self, AbstractISDPDF) else self._pdf.isd2pdf['k2'].value
-        # except KeyError, ParameterNotFoundError:
-        #     pass
 
         req.pdf_parameters = {name: param.value 
                               for name, param in sampler._pdf.isd2pdf._params.iteritems()}
@@ -113,6 +109,19 @@ class HMCISD2MPRE(AbstractISD2MPRE):
         
         return ISD2MPFastHMCSampler(pdf=param.pdf, state=param.state, timestep=param.timestep, 
                                     nsteps=param.nsteps)
+
+    def sample(self):
+
+        res = super(HMCISD2MPRE, self).sample()
+        
+        if True:
+            for s in self._samplers:
+                if s.last_move_accepted:
+                    s.timestep *= 1.05
+                else:
+                    s.timestep *= 0.95
+
+        return res
 
 
 class AbstractISD2RE(ReplicaExchangeMC):

@@ -53,7 +53,7 @@ from mpsampling import MPFastHMCSampler
 class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
     def __init__(self, pdf, state, timestep, nsteps,
-                 integrator=FastLeapFrog, temperature=1.0, adapt_timestep=True):
+                 integrator=FastLeapFrog, temperature=1.0):
 
         wrapped_pdf = PDFWrapper(pdf)
         super(ISD2MPFastHMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
@@ -81,12 +81,6 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
             
         sample_result = NSampleResult(samples, SamplerStats(self._nmoves,
                                                             [x[1] for x in samples]))
-
-        if self.adapt_timestep:
-            if self.last_move_accepted:
-                self.timestep *= 1.05
-            else:
-                self.timestep *= 0.95
                 
         self.client_pipe_end.send(sample_result)
         
