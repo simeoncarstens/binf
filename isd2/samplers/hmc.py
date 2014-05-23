@@ -59,8 +59,6 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
         super(ISD2MPFastHMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
                                              timestep, nsteps, integrator, temperature)
 
-        self.adapt_timestep = adapt_timestep
-        
         self.mpinit()
 
     def sample(self, sample_request):
