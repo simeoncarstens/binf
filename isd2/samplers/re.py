@@ -191,5 +191,5 @@ class HMCISD2RE(AbstractISD2RE):
         from isd2.samplers.hmc import ISD2HMCSampler
         
         return ISD2HMCSampler(pdf=param.pdf, state=param.state, timestep=param.timestep, 
-                                    nsteps=param.nsteps)
+                              nsteps=param.nsteps)
 
