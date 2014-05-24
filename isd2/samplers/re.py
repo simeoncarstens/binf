@@ -42,12 +42,6 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
             for p in self._schedule:
                 s._pdf.isd2pdf[p].set(self._schedule[p][i])
 
-    # def _update_pdfs(self):
-
-    #     for s in self._samplers:
-    #         for p in self.pdf.parameters:
-    #             s._pdf.isd2pdf[p].set(self.pdf[p].value)
-
     def sample(self):
 
         if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
@@ -94,7 +88,6 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
         from mpsampling import NSampleRequest
         
         req = NSampleRequest(sampler.state, n, sampler.timestep)
-
         req.pdf_parameters = {name: param.value 
                               for name, param in sampler._pdf.isd2pdf._params.iteritems()}
         

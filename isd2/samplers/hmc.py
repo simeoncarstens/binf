@@ -69,7 +69,6 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
         self.state = sample_request.state
         self.timestep = sample_request.timestep
 
-        # self._pdf.isd2pdf['k2'].set(sample_request.k2)
         self.update_pdf_params(**sample_request.pdf_parameters)
 
         samples = []
