@@ -109,19 +109,9 @@ class AbstractLikelihood(AbstractISDPDF):
 
     def conditional_factory(self, **fixed_vars):
 
-        result = self.__class__(self.name,
-                                self.forward_model.clone(),
-                                self.error_model.conditional_factory(**fixed_vars),
-                                self.data)
+        result = self.clone()
 
-        for v in fixed_vars:
-            if v in result.variables:
-                result._delete_variable(v)
-                result._register(v)
-                if v in self.var_param_types:
-                    result[v] = self.var_param_types[v](fixed_vars[v], v)
-                else:
-                    raise ValueError('Parameter type for variable "'+v+'" not defined')
-
-        return result            
+        result.fix_variables(**fixed_vars)
+        
+        return result
 

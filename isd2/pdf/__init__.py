@@ -98,3 +98,15 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def clone(self):
 
         pass
+
+    def fix_variables(self, **fixed_vars):
+
+        for v in fixed_vars:
+            if v in self.variables:
+                self._delete_variable(v)
+                self._register(v)
+                if v in self.var_param_types:
+                    self[v] = self.var_param_types[v](fixed_vars[v], v)
+                else:
+                    raise ValueError('Parameter type for variable "'+v+'" not defined')
+
