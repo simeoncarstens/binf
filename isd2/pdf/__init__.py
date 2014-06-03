@@ -97,4 +97,4 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     def clone(self):
 
-        pass      
+        pass

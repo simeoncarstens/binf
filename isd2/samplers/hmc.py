@@ -10,6 +10,8 @@ from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.singlechain import HMCSampler
 from csb.numeric.integrators import FastLeapFrog
 
+from mpsampling import MPFastHMCSampler
+
 
 class ISD2HMCSampler(HMCSampler):
     '''
@@ -42,13 +44,20 @@ class ISD2HMCSampler(HMCSampler):
         self._pdf = wrapped_pdf
         self._update_gradients()
         
+    def _update_gradients(self):
+
+        self._gradient = self._pdf.gradient
+        self._propagator._gradient = self._pdf.gradient
+        try:
+            self._propagator._integrator._gradient = self._pdf.gradient
+        except AttributeError:
+            pass
+
     def update_pdf_params(self, **params):
 
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
 
-
-from mpsampling import MPFastHMCSampler
         
 class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
@@ -57,7 +66,7 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
         wrapped_pdf = PDFWrapper(pdf)
         super(ISD2MPFastHMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
-                                             timestep, nsteps, integrator, temperature)
+                                                   timestep, nsteps, integrator, temperature)
 
         self.mpinit()
 
@@ -103,64 +112,6 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
-
-class HMCSampler2(object):
-    '''
-    Not working, because it's not finished.
-    '''
-    
-    def __init__(self, state, pdf, timestep, nsteps, variable_name):
-
-        raise NotImplementedError
-
-        self.state = state
-        self.pdf = pdf
-        self.timestep = timestep
-        self.nsteps = nsteps
-        self.variable_name = variable_name
-
-        self.n_accepted = 0
-        self.n_total = 0
-
-    def sample(self):
-
-        from copy import deepcopy
-
-        vn = self.variable_name
-
-        def H(s):
-            return 0.5 * numpy.sum(s.momenta[vn] ** 2) \
-                   - self.pdf.log_prob(vn=s.variables[vn].value)
-
-        s = deepcopy(self.state)
-        s._momenta[vn] = numpy.random.normal(len(s.variables[vn].value))
-
-        H_old = H(s)
-
-        x = s._variables[vn]._value
-        p = s._momenta[vn]
-        
-        p -= 0.5 * self.timestep * self.pdf.gradient(vn=x)
-
-        for i in xrange(nsteps - 1):
-            x += self.timestep * p
-            p -= self.timestep * self.pdf.gradient(vn=x)
-
-        x += self.timestep * p
-        p -= 0.5 * self.timestep * self.pdf.gradient(vn=x)
-
-        H_new = H(s)
-
-        if numpy.random.uniform() < numpy.exp(-H_new + H_old):
-            self.n_accepted += 1
-            self.state.variables[vn].set(s.variables[vn].value)
-
-        return self.state
-    
-    @property
-    def acceptance_rate(self):
-
-        return float(self.n_accepted) / self.n_total
 
 
 class HMCParameterInfo(object):
