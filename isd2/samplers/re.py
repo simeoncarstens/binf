@@ -4,36 +4,42 @@ Replica Exchange
 
 from abc import ABCMeta, abstractmethod
 
-from mpsampling import MPReplicaExchangeMC
+from mpsampling import MPReplicaExchangeMC, AbstractMPExchangeMC
 from csb.statistics.samplers.mc.multichain import AlternatingAdjacentSwapScheme, RESwapParameterInfo, ReplicaExchangeMC
 
 from isd2.samplers.pdfwrapper import PDFWrapper
 
 
-class AbstractISD2MPRE(MPReplicaExchangeMC):
+class AbstractISD2RE(ReplicaExchangeMC):
 
-    def __init__(self, pdf, sampler_params, schedule, swap_interval=5, n_processes=None):
+    def __init__(self, pdf, sampler_params, schedule, swap_interval=5, **extra_params):
 
         self._samples = []
 
         self._pdf = PDFWrapper(pdf)
-        samplers = [self._sampler_factory(p) for p in sampler_params]
-        param_infos = [RESwapParameterInfo(samplers[i], samplers[i+1])
-                       for i in xrange(len(samplers) - 1)]
 
-        n_procs = len(sampler_params) if n_processes is None else n_processes
-        super(AbstractISD2MPRE, self).__init__(samplers, param_infos, n_procs)
-
+        self._setup_csb_re(sampler_params, **extra_params)
+        
         self._swap_scheme = AlternatingAdjacentSwapScheme(self)
         self._swap_interval = swap_interval
         self._schedule = schedule
 
         self._sample_counter = 0
 
+    def _setup_csb_re(self, sampler_params, **extra_params):
+
+        samplers = [self._sampler_factory(p) for p in sampler_params]
+        param_infos = [RESwapParameterInfo(samplers[i], samplers[i+1])
+                       for i in xrange(len(samplers) - 1)]
+
+        super(AbstractISD2RE, self).__init__(samplers, param_infos)
+
     def _bind_sampler_params(self):
 
         for s in self._samplers:
             for p in s._pdf.isd2pdf.parameters:
+                if p in self._schedule:
+                    continue
                 s._pdf.isd2pdf[p].bind_to(self._pdf[p])
                 
     def _restore_schedule(self):
@@ -46,15 +52,15 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
 
         if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
             self._swap_scheme.swap_all()
-            res = [self.state]
+            res = self.state
         else:
-            res = super(AbstractISD2MPRE, self).sample()
+            res = super(AbstractISD2RE, self).sample()
 
         self._samples.append(res)
 
         self._sample_counter += 1
 
-        return res[0][0].position
+        return res[0].position
 
     @abstractmethod
     def _sampler_factory(self, param):
@@ -83,6 +89,38 @@ class AbstractISD2MPRE(MPReplicaExchangeMC):
         for s in self._samplers:
             s.update_pdf_params(**params)
 
+
+class AbstractISD2MPRE(AbstractISD2RE, AbstractMPExchangeMC):
+
+    def __init__(self, pdf, sampler_params, schedule, swap_interval=5, n_processes=None):
+
+        super(AbstractISD2MPRE, self).__init__(pdf, sampler_params, schedule, swap_interval, 
+                                               n_processes=n_processes)
+
+    def _setup_csb_re(self, sampler_params, n_processes):
+
+        samplers = [self._sampler_factory(p) for p in sampler_params]
+        param_infos = [RESwapParameterInfo(samplers[i], samplers[i+1])
+                       for i in xrange(len(samplers) - 1)]
+        n_procs = len(sampler_params) if n_processes is None else n_processes
+
+        AbstractMPExchangeMC.__init__(self, samplers=samplers, params=param_infos, 
+                                      n_processes=n_procs)
+        
+    def sample(self):
+
+        if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
+            self._swap_scheme.swap_all()
+            res = [self.state]
+        else:
+            res = AbstractMPExchangeMC.sample(self)
+
+        self._samples.append(res)
+
+        self._sample_counter += 1
+
+        return res[0][0].position
+
     def _create_sample_request(self, sampler, n):
 
         from mpsampling import NSampleRequest
@@ -103,78 +141,22 @@ class HMCISD2MPRE(AbstractISD2MPRE):
         return ISD2MPFastHMCSampler(pdf=param.pdf, state=param.state, timestep=param.timestep, 
                                     nsteps=param.nsteps)
 
+    def _adapt_sampler_timesteps(self):
+
+        for s in self._samplers:
+            if s.last_move_accepted:
+                s.timestep *= 1.05
+            else:
+                s.timestep *= 0.95
+
     def sample(self):
 
         res = super(HMCISD2MPRE, self).sample()
         
         if True:
-            for s in self._samplers:
-                if s.last_move_accepted:
-                    s.timestep *= 1.05
-                else:
-                    s.timestep *= 0.95
-
+            self._adapt_sampler_timesteps()
+            
         return res
-
-
-class AbstractISD2RE(ReplicaExchangeMC):
-
-    def __init__(self, pdf, sampler_params, swap_interval=5):
-
-        self._samples = []
-
-        self._pdf = PDFWrapper(pdf)
-        samplers = [self._sampler_factory(p) for p in sampler_params]
-        param_infos = [RESwapParameterInfo(samplers[i], samplers[i+1])
-                       for i in xrange(len(samplers) - 1)]
-
-        super(AbstractISD2RE, self).__init__(samplers, param_infos)
-
-        self._swap_scheme = AlternatingAdjacentSwapScheme(self)
-        self._swap_interval = swap_interval
-
-        self._sample_counter = 0
-
-    def sample(self):
-
-        self._update_sampler_pdf_params(**{'k2': self._pdf['k2'].value})
-
-        if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
-            self._swap_scheme.swap_all()
-            res = self.state
-        else:
-            res = super(AbstractISD2RE, self).sample()
-
-        self._samples.append(res)
-
-        self._sample_counter += 1
-
-        return res[0].position
-
-    @abstractmethod
-    def _sampler_factory(self, param):
-        pass
-
-    @property
-    def pdf(self):
-        return self._pdf
-    @pdf.setter
-    def pdf(self, value):
-
-        from isd2.pdf import AbstractISDPDF
-        wrapped_pdf = value if isinstance(value, AbstractISDPDF) else PDFWrapper(value)
-        self._set_sampler_pdfs(wrapped_pdf)
-        self._pdf = wrapped_pdf
-
-    def _set_sampler_pdfs(self, wrapped_pdf):
-
-        for s in self._samplers:
-            s.pdf = wrapped_pdf
-
-    def _update_sampler_pdf_params(self, **params):
-
-        for s in self._samplers:
-            s.update_pdf_params(**params)
 
 
 class HMCISD2RE(AbstractISD2RE):
@@ -185,4 +167,3 @@ class HMCISD2RE(AbstractISD2RE):
         
         return ISD2HMCSampler(pdf=param.pdf, state=param.state, timestep=param.timestep, 
                               nsteps=param.nsteps)
-
