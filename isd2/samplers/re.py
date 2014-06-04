@@ -4,13 +4,13 @@ Replica Exchange
 
 from abc import ABCMeta, abstractmethod
 
-from mpsampling import MPReplicaExchangeMC, AbstractMPExchangeMC
-from csb.statistics.samplers.mc.multichain import AlternatingAdjacentSwapScheme, RESwapParameterInfo, ReplicaExchangeMC
+from csb.statistics.samplers.mc.multichain import AlternatingAdjacentSwapScheme, RESwapParameterInfo
+from mpsampling_new import SimpleReplicaExchangeMC as ReplicaExchangeMC, MPReplicaExchangeMC, MPSampleCommunicator, AbstractReplicaExchangeMC
 
 from isd2.samplers.pdfwrapper import PDFWrapper
 
 
-class AbstractISD2RE(ReplicaExchangeMC):
+class AbstractISD2RE(AbstractReplicaExchangeMC):
 
     def __init__(self, pdf, sampler_params, schedule, swap_interval=5, **extra_params):
 
@@ -90,42 +90,22 @@ class AbstractISD2RE(ReplicaExchangeMC):
             s.update_pdf_params(**params)
 
 
-class AbstractISD2MPRE(AbstractISD2RE, AbstractMPExchangeMC):
+class AbstractISD2MPRE(AbstractISD2RE):
 
     def __init__(self, pdf, sampler_params, schedule, swap_interval=5, n_processes=None):
 
-        super(AbstractISD2MPRE, self).__init__(pdf, sampler_params, schedule, swap_interval, 
-                                               n_processes=n_processes)
+        self._n_processes = n_processes
 
-    def _setup_csb_re(self, sampler_params, n_processes):
+        super(AbstractISD2MPRE, self).__init__(pdf, sampler_params, schedule, swap_interval)
 
-        samplers = [self._sampler_factory(p) for p in sampler_params]
-        param_infos = [RESwapParameterInfo(samplers[i], samplers[i+1])
-                       for i in xrange(len(samplers) - 1)]
-        n_procs = len(sampler_params) if n_processes is None else n_processes
 
-        AbstractMPExchangeMC.__init__(self, samplers=samplers, params=param_infos, 
-                                      n_processes=n_procs)
+class HMCISD2MPSampleCommunicator(MPSampleCommunicator):
+
+    def _create_sample_request(self, sampler):
         
-    def sample(self):
-
-        if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
-            self._swap_scheme.swap_all()
-            res = [self.state]
-        else:
-            res = AbstractMPExchangeMC.sample(self)
-
-        self._samples.append(res)
-
-        self._sample_counter += 1
-
-        return res[0][0].position
-
-    def _create_sample_request(self, sampler, n):
-
         from mpsampling import NSampleRequest
         
-        req = NSampleRequest(sampler.state, n, sampler.timestep)
+        req = NSampleRequest(sampler.state, 1, sampler.timestep)
         req.pdf_parameters = {name: param.value 
                               for name, param in sampler._pdf.isd2pdf._params.iteritems()}
         
@@ -150,13 +130,17 @@ class HMCISD2MPRE(AbstractISD2MPRE):
                 s.timestep *= 0.95
 
     def sample(self):
-
+        
         res = super(HMCISD2MPRE, self).sample()
         
         if True:
             self._adapt_sampler_timesteps()
             
         return res
+
+    def _set_sample_communicator(self):
+
+        self._sample_communicator = HMCISD2MPSampleCommunicator(self, self._n_processes)
 
 
 class HMCISD2RE(AbstractISD2RE):
