@@ -55,15 +55,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def conditional_factory(self, **fixed_vars):
 
         result = self.clone()
-
-        for v in fixed_vars:
-            if v in result.variables:
-                result._delete_variable(v)
-                result._register(v)
-                if v in self.var_param_types:
-                    result[v] = self.var_param_types[v](fixed_vars[v], v)
-                else:
-                    raise ValueError('Parameter type for variable "'+v+'" not defined')
+        result.fix_variables(**fixed_vars)
 
         return result            
     
@@ -109,4 +101,8 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
                     self[v] = self.var_param_types[v](fixed_vars[v], v)
                 else:
                     raise ValueError('Parameter type for variable "'+v+'" not defined')
+
+    def set_fixed_variables_from_pdf(self, pdf):
+
+        self.fix_variables(**{p: pdf[p].value for p in pdf.parameters if not p in self.parameters})
 
