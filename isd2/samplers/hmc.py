@@ -11,7 +11,7 @@ from csb.statistics.samplers.mc.singlechain import HMCSampler
 from csb.numeric.integrators import FastLeapFrog
 
 from mpsampling import MPFastHMCSampler
-
+from fastcode import FastHMCSampler
 
 class ISD2HMCSampler(HMCSampler):
     '''
@@ -61,6 +61,69 @@ class ISD2HMCSampler(HMCSampler):
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
 
+
+class ISD2FastHMCSampler(FastHMCSampler):
+    '''
+    It would be nice to subclass all ISD2 samplers from isd2.samplers.AbstractISD2SingleChainMC,
+    but obviously also from their corresponding CSB classes, e.g. this class should
+    be subclassed from both AbstractISD2SingleChainMC and 
+    csb.statistics.samplers.mc.singlechain.HMCSampler, resulting in diamond inheritance,
+    which is bad.
+    '''
+
+    def __init__(self, pdf, state, timestep, nsteps, 
+                 timestep_adaption=True, adaption_uprate=1.05, adaption_downrate=0.95):
+
+        from isd2.pdf import AbstractISDPDF
+        
+        wrapped_pdf = pdf if not isinstance(pdf, AbstractISDPDF) else PDFWrapper(pdf)
+        wrapped_state = state if 'position' in dir(state) else State(state)
+        super(ISD2FastHMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
+                                                 timestep, nsteps)
+
+        self.timestep_adaption = timestep_adaption
+        self.adaption_uprate = adaption_uprate
+        self.adaption_downrate = adaption_downrate
+
+    def sample(self):
+
+        res = super(ISD2FastHMCSampler, self).sample()
+
+        if self.timestep_adaption:
+            self._adapt_timestep()
+
+        return res
+
+    def _adapt_timestep(self):
+
+        if self.last_move_accepted:
+            self.timestep *= self.adaption_uprate
+        else:
+            self.timestep *= self.adaption_downrate
+
+    @property
+    def pdf(self):
+        return self._pdf
+    @pdf.setter
+    def pdf(self, value):
+        wrapped_pdf = PDFWrapper(value)
+        self._pdf = wrapped_pdf
+        self._update_gradients()
+        
+    def _update_gradients(self):
+
+        self._gradient = self._pdf.gradient
+        self._propagator._gradient = self._pdf.gradient
+        try:
+            self._propagator._integrator._gradient = self._pdf.gradient
+        except AttributeError:
+            pass
+
+    def update_pdf_params(self, **params):
+
+        for p in params:
+            self._pdf.isd2pdf[p].set(params[p])
+            
         
 class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
