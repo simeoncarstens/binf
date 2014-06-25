@@ -25,8 +25,11 @@ class ISD2HMCSampler(HMCSampler):
     def __init__(self, pdf, state, timestep, nsteps,
                  mass_matrix=None, integrator=FastLeapFrog, temperature=1.0):
 
-        wrapped_pdf = PDFWrapper(pdf)
-        super(ISD2HMCSampler, self).__init__(wrapped_pdf, State(state), wrapped_pdf.gradient, 
+        from isd2.pdf import AbstractISDPDF
+        
+        wrapped_pdf = pdf if not isinstance(pdf, AbstractISDPDF) else PDFWrapper(pdf)
+        wrapped_state = state if 'position' in dir(state) else State(state)
+        super(ISD2HMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
                                              timestep, nsteps, mass_matrix, integrator, temperature)
 
     def sample(self):
