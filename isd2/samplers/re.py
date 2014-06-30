@@ -5,7 +5,7 @@ Replica Exchange
 from abc import ABCMeta, abstractmethod
 
 from csb.statistics.samplers.mc.multichain import AlternatingAdjacentSwapScheme, RESwapParameterInfo
-from mpsampling_new import SimpleReplicaExchangeMC as ReplicaExchangeMC, MPReplicaExchangeMC, MPSampleCommunicator, AbstractReplicaExchangeMC
+from mpsampling_new import SimpleReplicaExchangeMC as ReplicaExchangeMC, MPReplicaExchangeMC, MPSampleCommunicator, AbstractReplicaExchangeMC, SimpleSampleCommunicator
 
 from isd2.samplers.pdfwrapper import PDFWrapper
 
@@ -112,6 +112,10 @@ class HMCISD2MPSampleCommunicator(MPSampleCommunicator):
         return req
 
 
+class HMCISD2SampleCommunicator(SimpleSampleCommunicator):
+    pass
+    
+
 class HMCISD2MPRE(AbstractISD2MPRE):
 
     def _sampler_factory(self, param):
@@ -151,3 +155,7 @@ class HMCISD2RE(AbstractISD2RE):
         
         return ISD2HMCSampler(pdf=param.pdf, state=param.state, timestep=param.timestep, 
                               nsteps=param.nsteps)
+
+    def _set_sample_communicator(self):
+
+        self._sample_communicator = HMCISD2SampleCommunicator(self)

@@ -61,20 +61,24 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     
     @abstractmethod
     def _evaluate_log_prob(self, **variables):
-
         pass
+
+    def _evaluate(self, **variables):
+
+        return exp(self.log_prob(**variables))
 
     def log_prob(self, **variables):
 
         vs = self._complete_variables(**variables)
         ## _complete_variables originally was supposed to update the variables
         ## dict in-place, but that didn't work and return it. Now here the dict
-        ##  still wasn't updated. Don't understand why...
+        ## still wasn't updated. Don't understand why...
+
         result = self._evaluate_log_prob(**vs)
         variables = self._reduce_variables(**vs)
 
         return result
-
+    
     def gradient(self, **variables):
 
         vs = self._complete_variables(**variables)
@@ -83,9 +87,9 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         return result
 
-    def __call__(self, **variables):
+    # def __call__(self, **variables):
 
-        return exp(self.log_prob(**variables))
+    #     return exp(self.log_prob(**variables))
 
     def clone(self):
 
@@ -105,4 +109,23 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def set_fixed_variables_from_pdf(self, pdf):
 
         self.fix_variables(**{p: pdf[p].value for p in pdf.parameters if not p in self.parameters})
+
+    def _complete_variables(self, **variables):
+        '''
+        _complete_variables and _reduce_variables so far only work for classes
+        which both inherit from AbstractISDNamedCallable and can hold parameters
+        (that is, PDFs and models)
+        '''
+
+        ## at some point, this wouldn't update the variable dict in-place when called from a log_prob. Why?
+        
+        variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
+
+        return variables
+
+    def _reduce_variables(self, **variables):
+
+        for p in self.parameters:
+            if p in variables:
+                variables.pop(p)
 
