@@ -159,3 +159,5 @@ class HMCISD2RE(AbstractISD2RE):
     def _set_sample_communicator(self):
 
         self._sample_communicator = HMCISD2SampleCommunicator(self)
+
+
