@@ -28,7 +28,8 @@ class AbstractISDNamedCallable(object):
         self._name = name
         self._variables = set()
         self._differentiable_variables = set()
-        
+        self._var_param_types = {}
+
     def _register_variable(self, name, differentiable=False):
 
         if type(name) != str:
@@ -90,7 +91,7 @@ class AbstractISDNamedCallable(object):
         self._reduce_variables(**variables)
         
         return result
-
+    
     @abstractmethod
     def _complete_variables(self, **variables):
         pass

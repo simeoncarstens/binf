@@ -87,10 +87,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         return result
 
-    # def __call__(self, **variables):
-
-    #     return exp(self.log_prob(**variables))
-
     def clone(self):
 
         pass
