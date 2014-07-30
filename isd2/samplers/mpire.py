@@ -27,6 +27,11 @@ class ISDMPIReplica(AbstractMPIReplica):
         for name, value in request.parameters.items():
             self.pdf.isd2pdf[name].set(value)
 
+    def _setup_pdf(self):
+
+        for name, value in self.pdf_params.items():
+            self.pdf[name].set(value)
+
 
 class MPIISD2RE(MPIReplicaExchangeMC):
 
@@ -77,7 +82,7 @@ class MPIISD2RE(MPIReplicaExchangeMC):
     def _get_target_replica_state(self):
 
         request = GetStateRequest(self.rank)
-        self.comm.send(request, dest=self._target_replica_id)
-        state = self.comm.recv(source=self._target_replica_id)
+        self.comm.send(request, dest=self.id_offset + self._target_replica_id)
+        state = self.comm.recv(source=self.id_offset + self._target_replica_id)
 
         return state
