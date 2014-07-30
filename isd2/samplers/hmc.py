@@ -86,7 +86,7 @@ class ISD2FastHMCSampler(FastHMCSampler):
         self.adaption_downrate = adaption_downrate
 
     def sample(self):
-
+        
         res = super(ISD2FastHMCSampler, self).sample()
 
         if self.timestep_adaption:
