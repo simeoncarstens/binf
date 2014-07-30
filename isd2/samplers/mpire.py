@@ -30,15 +30,15 @@ class ISDMPIReplica(AbstractMPIReplica):
 
 class MPIISD2RE(MPIReplicaExchangeMC):
 
-    def __init__(self, pdf, schedule, swap_interval, target_replica_id):
+    def __init__(self, pdf, schedule, swap_interval, target_replica_id, n_replicas, id_offset=1):
 
-        super(MPIISD2RE, self).__init__()
+        super(MPIISD2RE, self).__init__(id_offset=id_offset, n_replicas=n_replicas)
 
         self._pdf = pdf
         self._schedule = schedule
 
         self._sample_counter = 0
-        self._n_replicas = self.comm.Get_size() - 1
+        # self._n_replicas = len(self._schedule.items()[0])
         self._target_replica_id = target_replica_id
         self._swap_interval = swap_interval
                 
@@ -67,12 +67,12 @@ class MPIISD2RE(MPIReplicaExchangeMC):
 
     def _update_sampler_pdf_params(self):
 
-        for i in xrange(1, self._n_replicas + 1):
+        for i in xrange(self._n_replicas):
             request = UpdatePDFParamsRequest(parameters={name: self.pdf[name].value 
                                                          for name in self.pdf.parameters 
                                                          if not name in self._schedule})
 
-            self.comm.send(request, dest=i)
+            self.comm.send(request, dest=self.id_offset + i)
 
     def _get_target_replica_state(self):
 

@@ -125,3 +125,34 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
             if p in variables:
                 variables.pop(p)
 
+
+class TestHO(AbstractISDPDF):
+
+    def __init__(self, k=1.0, x0=0.0, name='TestHO'):
+
+        from csb.statistics.pdf.parameterized import Parameter
+        from hicisd2.hicisd2lib import ArrayParameter
+        
+        super(TestHO, self).__init__(name=name)
+
+        self._register('k')
+        self._register('x0')
+        self['k'] = Parameter(k, name='k')
+        self['x0'] = Parameter(x0, name='x0')
+        self._register_variable('x', differentiable=True)
+
+        self._set_original_variables()
+        self.update_var_param_types(x=ArrayParameter)
+
+    def _evaluate_log_prob(self, x):
+
+        import numpy
+        
+        return -0.5 * self['k'].value * numpy.sum((x - self['x0'].value) ** 2)
+
+    def _evaluate_gradient(self, x):
+
+        import numpy
+        
+        return self['k'].value * (x - self['x0'].value)
+        
