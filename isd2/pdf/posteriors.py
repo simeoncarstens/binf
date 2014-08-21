@@ -108,8 +108,18 @@ class Posterior(AbstractISDPDF):
 
         for n, f in self._components.iteritems():
             if len(f.variables) > 0 and len(f.differentiable_variables) > 0:
-                res += f.gradient(**{x: vars[x] for x in vars 
+                print "calculating gradient for", f
+                bla = f.gradient(**{x: vars[x] for x in vars 
                                      if x in f.variables})
+
+                print "printing", f.__class__.__name__
+                if 'hood' in f.__class__.__name__:
+                    print "printing..."
+                    print res
+                    print bla
+                
+                res += bla#f.gradient(**{x: vars[x] for x in vars 
+                #          if x in f.variables})
 
 
         return res
