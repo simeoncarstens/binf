@@ -87,8 +87,14 @@ class AbstractLikelihood(AbstractISDPDF):
         mock_data = self.forward_model(**fwm_variables)
         dfm = self.forward_model.jacobi_matrix(**fwm_variables)
         emgrad = self.error_model.gradient(mock_data=mock_data, **em_variables)
+
+        print "calcualted all stuff"
+
+        res = dfm.dot(emgrad)
+
+        print "calcuialted dot prodef"
         
-        return dfm.dot(emgrad)
+        return res
 
     def clone(self):
 
