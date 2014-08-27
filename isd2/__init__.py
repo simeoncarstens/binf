@@ -77,7 +77,7 @@ class AbstractISDNamedCallable(object):
     def _check_differentiability(self, **variables):
 
         if len(variables.viewkeys() & set(self._differentiable_variables)) == 0:
-            msg = 'Function cannot be differentiated w.r.t. any of the variables '+variables
+            msg = 'Function cannot be differentiated w.r.t. any of the variables '+variables.keys()
             raise ValueError(msg)
 
     def _evaluate_gradient(self, **variables):
