@@ -2,8 +2,6 @@ from mpi4py import MPI
 
 from mpsampling_p2p import AbstractMPIReplica, MPIReplicaExchangeMC, GetStateRequest, AbstractReplicaRequest
 
-# from isd2.samplers.pdfwrapper import PDFWrapper
-
 
 class UpdatePDFParamsRequest(AbstractReplicaRequest):
 
@@ -43,7 +41,6 @@ class MPIISD2RE(MPIReplicaExchangeMC):
         self._schedule = schedule
 
         self._sample_counter = 0
-        # self._n_replicas = len(self._schedule.items()[0])
         self._target_replica_id = target_replica_id
         self._swap_interval = swap_interval
                 
