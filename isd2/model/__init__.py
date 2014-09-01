@@ -76,10 +76,6 @@ class AbstractModel(AbstractISDNamedCallable):
     def get_params(self):
         return [self._params[name] for name in self.parameters]
 
-    # @abstractmethod
-    # def __call__(self, **variables):
-    #     pass
-
     def _complete_variables(self, **variables):
         '''
         _complete_variables and _reduce_variables so far only work for classes

@@ -15,10 +15,6 @@ class AbstractForwardModel(AbstractModel):
 
         super(AbstractForwardModel, self).__init__(name, parameters)
 
-    # @abstractmethod
-    # def __call__(self, model_parameters):
-    #     pass
-
     @property
     def data(self):
         return self._data
