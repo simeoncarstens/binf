@@ -48,7 +48,10 @@ class MPIISD2RE(MPIReplicaExchangeMC):
 
         self._update_sampler_pdf_params()
         if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
-            self._trigger_exchanges()
+            swap_list = self._calculate_swap_list(self._sample_counter)
+            results = self._trigger_exchanges(swap_list)
+            self._update_stats(results)
+            self._send_border_replica_sample_requests(swap_list)
         else:
             self._trigger_normal_sampling()
 
