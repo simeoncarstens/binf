@@ -2,6 +2,8 @@
 HMC sampler
 '''
 
+from collections import namedtuple
+
 import numpy
 
 from isd2.samplers.pdfwrapper import PDFWrapper
@@ -12,6 +14,10 @@ from csb.numeric.integrators import FastLeapFrog
 
 from mpsampling import MPFastHMCSampler
 from fastcode import FastHMCSampler
+
+
+HMCSampleStats = namedtuple('HMCSampleStats', 'accepted total') 
+
 
 class ISD2HMCSampler(HMCSampler):
     '''
@@ -60,6 +66,11 @@ class ISD2HMCSampler(HMCSampler):
 
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
+
+    def get_last_draw_stats(self):
+
+        return HMCSampleStats(self._accepted, self._nmoves)
+    
 
 
 class ISD2FastHMCSampler(FastHMCSampler):
@@ -123,8 +134,12 @@ class ISD2FastHMCSampler(FastHMCSampler):
 
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
+
+    def get_last_draw_stats(self):
+
+        return HMCSampleStats(self._accepted, self._nmoves)
             
-        
+    
 class ISD2MPFastHMCSampler(MPFastHMCSampler):
 
     def __init__(self, pdf, state, timestep, nsteps,
@@ -179,7 +194,7 @@ class ISD2MPFastHMCSampler(MPFastHMCSampler):
         for p in params:
             self._pdf.isd2pdf[p].set(params[p])
 
-
+            
 class HMCParameterInfo(object):
 
     def __init__(self, **params):

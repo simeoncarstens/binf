@@ -1,6 +1,6 @@
 from mpi4py import MPI
 
-from mpsampling_p2p import AbstractMPIReplica, MPIReplicaExchangeMC, GetStateRequest, AbstractReplicaRequest
+from mpsampling_p2p import AbstractMPIReplica, MPIReplicaExchangeMC, GetStateRequest, AbstractReplicaRequest, ExchangeRequest
 
 
 class UpdatePDFParamsRequest(AbstractReplicaRequest):
@@ -86,3 +86,48 @@ class MPIISD2RE(MPIReplicaExchangeMC):
         state = self.comm.recv(source=self.id_offset + self._target_replica_id)
 
         return state
+
+
+class MPIGibbsISD2RE(MPIISD2RE):
+    
+    def sample(self):
+
+        ## Code duplication... needs to be refactored
+        
+        if self._sample_counter % self._swap_interval == 0 and self._sample_counter > 0:
+            swap_list = self._calculate_swap_list(self._sample_counter)
+            results = self._trigger_exchanges(swap_list)
+            self._update_stats(results)
+            self._send_border_replica_sample_requests(swap_list)
+        else:
+            self._trigger_normal_sampling()
+
+        res = self._get_target_replica_state()
+        self.state = res
+
+        self._sample_counter += 1
+
+        return res
+
+    def _update_sampler_pdf_params(self):
+        pass
+
+    def _send_exchange_requests(self, swap_list):
+        
+        for i in swap_list:
+            self.comm.send(ExchangeRequest(self.id_offset+i+1, 'MPIGibbsSimpleReplicaExchanger'), 
+                           dest=self.id_offset+i)
+
+
+class ISDGibbsMPIReplica(ISDMPIReplica):
+    
+    def _send_energy(self, request):
+
+        state = None
+        if request.state is None:
+            state = self.state
+        else:
+            state = request.state
+            
+        self.comm.send(-self.pdf.isd2pdf.log_prob(**state.variables),
+                       dest=request.requesting_replica_id)
