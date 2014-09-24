@@ -65,6 +65,12 @@ class MPIISD2RE(MPIReplicaExchangeMC):
 
         return res.position
 
+    def _print_sampler_stats(self):
+
+        for s in self._sampler_statistics:
+            print('{:.2f} '.format(float(s[-1].accepted) / s[-1].total)),
+        print('')
+
     @property
     def pdf(self):
         return self._pdf
