@@ -83,6 +83,11 @@ class HackedGibbsSampler(GibbsSampler):
             ## self._conditional_pdfs
             ## We need a way to cleanly update the subsamplers
             self._update_conditional_pdf_params()
+            if var == 'structure':
+                from csb.statistics.samplers import State
+                self.subsamplers[var].state = State(self.state.variables[var])
+            else:
+                self.subsamplers[var].state = self.state.variables[var]
             new = self.subsamplers[var].sample()
             ## HACK
             from csb.statistics.samplers import State
