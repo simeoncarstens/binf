@@ -69,8 +69,12 @@ class ISD2HMCSampler(HMCSampler):
 
     def get_last_draw_stats(self):
 
-        return HMCSampleStats(self._accepted, self._nmoves)
+        return HMCSampleStats(self._accepted, self._nmoves, self.timestep)
     
+    @property
+    def sampling_stats(self):
+
+        return [self.acceptance_rate, self.timestep, self.energy]
 
 
 class ISD2FastHMCSampler(FastHMCSampler):
@@ -138,6 +142,15 @@ class ISD2FastHMCSampler(FastHMCSampler):
     def get_last_draw_stats(self):
 
         return HMCSampleStats(self._accepted, self._nmoves)
+
+    @property
+    def sampling_stats(self):
+
+        from collections import OrderedDict
+
+        return OrderedDict(**{'HMC acceptance rate': self.acceptance_rate, 
+                              'HMC timestep': self.timestep, 
+                              'HMC pseudo-energy': self.energy})
             
     
 class ISD2MPFastHMCSampler(MPFastHMCSampler):

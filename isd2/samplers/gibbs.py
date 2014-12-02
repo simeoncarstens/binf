@@ -72,6 +72,11 @@ class GibbsSampler(AbstractSingleChainMC):
     def _propose():
         pass
 
+    @property
+    def sampling_stats(self):
+
+        return [sampler.sampling_stats for sampler in self.subsamplers.values()]
+    
 
 class HackedGibbsSampler(GibbsSampler):
         
@@ -100,6 +105,14 @@ class HackedGibbsSampler(GibbsSampler):
     def get_last_draw_stats(self):
 
         return {k: v.get_last_draw_stats() for k, v in self.subsamplers.items()}
+
+    @property
+    def sampling_stats(self):
+
+        from collections import OrderedDict
+        
+        return OrderedDict(**{key: value for sampler in self.subsamplers.values() 
+                              for key, value in sampler.sampling_stats.items()})
 
     
 if __name__ == '__main__':
