@@ -104,14 +104,17 @@ class HackedGibbsSampler(GibbsSampler):
 
     def get_last_draw_stats(self):
 
-        return {k: v.get_last_draw_stats() for k, v in self.subsamplers.items()}
+        return {k: v.get_last_draw_stats() for k, v in self.subsamplers.items() 
+                if 'get_last_draw_stats' in dir(v)}
 
     @property
     def sampling_stats(self):
 
         from collections import OrderedDict
-        
-        return OrderedDict(**{key: value for sampler in self.subsamplers.values() 
+
+        ss = [s for s in self.subsamplers.values() if 'sampling_stats' in dir(s)]
+
+        return OrderedDict(**{key: value for sampler in ss 
                               for key, value in sampler.sampling_stats.items()})
 
     
