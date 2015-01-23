@@ -97,14 +97,8 @@ class AbstractLikelihood(AbstractISDPDF):
                               self.error_model.clone(),
                               self.data)
 
-        for p in self.parameters:
-            if not p in copy.parameters:
-                copy._register(p)
-                copy[p] = self[p].__class__(self[p].value, p)
-
-        for v in copy.variables.difference(self.variables):
-            copy._delete_variable(v)
-
+        copy.set_fixed_variables_from_pdf(self)
+        
         return copy
 
     def conditional_factory(self, **fixed_vars):
