@@ -119,11 +119,8 @@ class Posterior(AbstractISDPDF):
                               {P: self.priors[P].clone() for P in self.priors}, 
                               self.name)
 
-        for p in self.parameters:
-            if not p in copy.parameters:
-                copy._register(p)
-                copy[p] = self[p].__class__(self[p].value, p)
-
+        copy.set_fixed_variables_from_pdf(self)
+        
         return copy
 
     def conditional_factory(self, **fixed_vars):
@@ -134,9 +131,6 @@ class Posterior(AbstractISDPDF):
                               for P in self.priors}
 
         copy = self.__class__(conditional_likelihoods, conditional_priors, self.name)
-
-        for v in copy.variables.difference(self.variables):
-            copy._delete_variable(v)
-
+        
         return copy
         

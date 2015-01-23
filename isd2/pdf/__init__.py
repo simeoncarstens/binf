@@ -55,7 +55,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def conditional_factory(self, **fixed_vars):
 
         result = self.clone()
-        result.fix_variables(**fixed_vars)
+        result.fix_variables(**self._get_variables_intersection(fixed_vars))
 
         return result            
     
@@ -70,10 +70,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def log_prob(self, **variables):
 
         vs = self._complete_variables(**variables)
-        ## _complete_variables originally was supposed to update the variables
-        ## dict in-place, but that didn't work and return it. Now here the dict
-        ## still wasn't updated. Don't understand why...
-
         result = self._evaluate_log_prob(**vs)
         variables = self._reduce_variables(**vs)
 
@@ -87,6 +83,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         return result
 
+    @abstractmethod
     def clone(self):
 
         pass
@@ -101,10 +98,13 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
                     self[v] = self.var_param_types[v](fixed_vars[v], v)
                 else:
                     raise ValueError('Parameter type for variable "'+v+'" not defined')
+            # else:
+            #     raise ValueError(v+' is not a variable of '+self.__repr__())
 
     def set_fixed_variables_from_pdf(self, pdf):
 
-        self.fix_variables(**{p: pdf[p].value for p in pdf.parameters if not p in self.parameters})
+        variables = {p: pdf[p].value for p in pdf.parameters if not p in self.parameters}
+        self.fix_variables(**self._get_variables_intersection(variables))
 
     def _complete_variables(self, **variables):
         '''
@@ -113,8 +113,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         (that is, PDFs and models)
         '''
 
-        ## at some point, this wouldn't update the variable dict in-place when called from a log_prob. Why?
-        
         variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
 
         return variables

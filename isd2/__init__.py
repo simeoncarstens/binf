@@ -100,6 +100,10 @@ class AbstractISDNamedCallable(object):
     def _reduce_variables(self, **variables):
         pass
 
+    def _get_variables_intersection(self, test_variables):
+
+        return {k: v for k, v in test_variables.items() if k in self.variables}
+
 
 class SimpleISDNamedCallable(AbstractISDNamedCallable):
 
