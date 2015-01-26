@@ -7,6 +7,7 @@ __version__ = '2.0.0'
 
 from abc import ABCMeta, abstractmethod
 
+import numpy
 import numpy as np, sys
 
 from csb.statistics.pdf.parameterized import AbstractParameter
