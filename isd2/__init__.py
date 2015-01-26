@@ -9,6 +9,8 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np, sys
 
+from csb.statistics.pdf.parameterized import AbstractParameter
+
 sys.setrecursionlimit(int(1e6))
 
 ## TODO: will we need this at all?
@@ -29,6 +31,10 @@ class AbstractISDNamedCallable(object):
         self._variables = set()
         self._differentiable_variables = set()
         self._var_param_types = {}
+
+    def _set_original_variables(self):
+
+        self._original_variables = self.variables.copy()
 
     def _register_variable(self, name, differentiable=False):
 
@@ -97,6 +103,25 @@ class AbstractISDNamedCallable(object):
     def _get_variables_intersection(self, test_variables):
 
         return {k: v for k, v in test_variables.items() if k in self.variables}
+
+    @property
+    def var_param_types(self):
+        '''
+        Empty by default, but for a conditional PDF to be built,
+        one has to add AbstractParameter subclasses suiting the variables.
+        '''
+        return self._var_param_types.copy()
+    def update_var_param_types(self, **values):
+        self._var_param_types.update(**values)
+
+
+class ArrayParameter(AbstractParameter):
+            
+    def _validate(self, value):
+        try:
+            return numpy.array(value)
+        except(TypeError, ValueError):
+            raise ParameterValueError(self.name, value)
 
 
     

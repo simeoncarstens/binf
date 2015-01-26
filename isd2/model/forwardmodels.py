@@ -11,6 +11,7 @@ class AbstractForwardModel(AbstractModel):
 
     __meta__ = ABCMeta
 
+    @abstractmethod
     def __init__(self, name, parameters=[]):
 
         super(AbstractForwardModel, self).__init__(name, parameters)
@@ -23,3 +24,8 @@ class AbstractForwardModel(AbstractModel):
     def jacobi_matrix(self, **model_parameters):
 
         self._check_differentiability(**model_parameters)
+
+    @abstractmethod
+    def clone(self):
+
+        pass
