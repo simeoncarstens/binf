@@ -28,10 +28,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
         self._var_param_types = {}
 
-    def _set_original_variables(self):
-
-        self._original_variables = self.variables.copy()
-
     @property
     def estimator(self):
         raise NotImplementedError
@@ -39,16 +35,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def estimator(self, strategy):
         pass
 
-    @property
-    def var_param_types(self):
-        '''
-        Empty by default, but for a conditional PDF to be built,
-        one has to add AbstractParameter subclasses suiting the variables.
-        '''
-        return self._var_param_types.copy()
-    def update_var_param_types(self, **values):
-        self._var_param_types.update(**values)
-    
     def estimate(self, data):
         raise NotImplementedError
 

@@ -26,7 +26,8 @@ class AbstractModel(AbstractISDNamedCallable):
 
         for x in parameters:
             self._register(x.name)
-            
+            self[x.name] = x
+
         self.set_params(*parameters)
 
     def _register(self, name):
