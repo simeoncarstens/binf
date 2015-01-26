@@ -4,6 +4,7 @@ Gibbs sampler
 
 import numpy
 
+from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.singlechain import AbstractSingleChainMC
 
 
@@ -55,13 +56,17 @@ class GibbsSampler(AbstractSingleChainMC):
 
     def sample(self):
 
+        from csb.statistics.samplers.mc import AbstractMC
+
         for var in self._pdf.variables:
-            ## looks nice, but in practice bad: some variables are drawn using built-in
-            ## distributions and not the conditional pdf object stored in 
-            ## self._conditional_pdfs
-            ## We need a way to cleanly update the subsamplers
             self._update_conditional_pdf_params()
+            if isinstance(self.subsamplers[var], AbstractMC):
+                self.subsamplers[var].state = State(self.state.variables[var])
+            else:
+                self.subsamplers[var].state = self.state.variables[var]
             new = self.subsamplers[var].sample()
+            if type(new) == State:
+                new = new.position
             self._state.update_variables(**{var: new})
 
         return self._state
@@ -71,36 +76,6 @@ class GibbsSampler(AbstractSingleChainMC):
 
     def _propose():
         pass
-
-    @property
-    def sampling_stats(self):
-
-        return [sampler.sampling_stats for sampler in self.subsamplers.values()]
-    
-
-class HackedGibbsSampler(GibbsSampler):
-        
-    def sample(self):
-
-        for var in self._pdf.variables:
-            ## looks nice, but in practice bad: some variables are drawn using built-in
-            ## distributions and not the conditional pdf object stored in 
-            ## self._conditional_pdfs
-            ## We need a way to cleanly update the subsamplers
-            self._update_conditional_pdf_params()
-            if var == 'structure':
-                from csb.statistics.samplers import State
-                self.subsamplers[var].state = State(self.state.variables[var])
-            else:
-                self.subsamplers[var].state = self.state.variables[var]
-            new = self.subsamplers[var].sample()
-            ## HACK
-            from csb.statistics.samplers import State
-            if type(new) == State:
-                new = new.position
-            self._state.update_variables(**{var: new})
-
-        return self._state
 
     def get_last_draw_stats(self):
 
@@ -116,7 +91,7 @@ class HackedGibbsSampler(GibbsSampler):
 
         return OrderedDict(**{key: value for sampler in ss 
                               for key, value in sampler.sampling_stats.items()})
-
+    
     
 if __name__ == '__main__':
 
