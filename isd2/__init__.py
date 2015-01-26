@@ -64,9 +64,8 @@ class AbstractISDNamedCallable(object):
 
     def __call__(self, **variables):        
 
-        self._complete_variables(**variables)
+        self._complete_variables(variables)
         result = self._evaluate(**variables)
-        self._reduce_variables(**variables)
 
         return result
 
@@ -86,34 +85,21 @@ class AbstractISDNamedCallable(object):
 
     def gradient(self, **variables):
 
-        self._complete_variables(**variables)
+        self._complete_variables(variables)
         result = self._evaluate_gradient(**variables)
-        self._reduce_variables(**variables)
         
         return result
     
     @abstractmethod
-    def _complete_variables(self, **variables):
+    def _complete_variables(self, variables):
         pass
     
-    @abstractmethod
-    def _reduce_variables(self, **variables):
-        pass
-
     def _get_variables_intersection(self, test_variables):
 
         return {k: v for k, v in test_variables.items() if k in self.variables}
 
 
-class SimpleISDNamedCallable(AbstractISDNamedCallable):
-
-    def _complete_variables(self, **variables):
-        pass
     
-    def _reduce_variables(self, **variables):
-        pass
-
-
 # def memoize(f):
 #     return f
     

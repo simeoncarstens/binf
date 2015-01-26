@@ -69,17 +69,15 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
 
     def log_prob(self, **variables):
 
-        vs = self._complete_variables(**variables)
-        result = self._evaluate_log_prob(**vs)
-        variables = self._reduce_variables(**vs)
+        self._complete_variables(variables)
+        result = self._evaluate_log_prob(**variables)
 
         return result
     
     def gradient(self, **variables):
 
-        vs = self._complete_variables(**variables)
-        result = self._evaluate_gradient(**vs)
-        variables = self._reduce_variables(**vs)
+        self._complete_variables(variables)
+        result = self._evaluate_gradient(**variables)
 
         return result
 
@@ -98,15 +96,15 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
                     self[v] = self.var_param_types[v](fixed_vars[v], v)
                 else:
                     raise ValueError('Parameter type for variable "'+v+'" not defined')
-            # else:
-            #     raise ValueError(v+' is not a variable of '+self.__repr__())
+            else:
+                raise ValueError(v+' is not a variable of '+self.__repr__())
 
     def set_fixed_variables_from_pdf(self, pdf):
 
         variables = {p: pdf[p].value for p in pdf.parameters if not p in self.parameters}
         self.fix_variables(**self._get_variables_intersection(variables))
 
-    def _complete_variables(self, **variables):
+    def _complete_variables(self, variables):
         '''
         _complete_variables and _reduce_variables so far only work for classes
         which both inherit from AbstractISDNamedCallable and can hold parameters
@@ -114,14 +112,6 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         '''
 
         variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
-
-        return variables
-
-    def _reduce_variables(self, **variables):
-
-        for p in self.parameters:
-            if p in variables:
-                variables.pop(p)
 
 
 class TestHO(AbstractISDPDF):
@@ -153,4 +143,3 @@ class TestHO(AbstractISDPDF):
         import numpy
         
         return self['k'].value * (x - self['x0'].value)
-        
