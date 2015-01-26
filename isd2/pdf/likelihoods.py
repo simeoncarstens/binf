@@ -26,10 +26,6 @@ class AbstractLikelihood(AbstractISDPDF):
         self._error_model = error_model
         self._data = data
 
-        fwm_params = {p.name: p for p in self._forward_model.get_params()}
-        em_params = {p.name: p for p in self._error_model.get_params()}
-        self._nuisance_params = dict(fwm_params, **em_params)
-
         self._setup_parameters()
         
         self._set_original_variables()
@@ -56,34 +52,18 @@ class AbstractLikelihood(AbstractISDPDF):
     def data(self):
         return self._data
 
-    def _split_variables(self, **variables):
-
-        return {v: variables[v] for v in variables if not v in self._nuisance_params},\
-               {v: variables[v] for v in variables if v in self._nuisance_params}
-
-    def _update_nuisance_parameters(self, **nuisance_params):
-
-        for p in nuisance_params:
-            self._nuisance_params[p].set(nuisance_params[p])
-
     def _evaluate_log_prob(self, **variables):
 
-        vois, nps = self._split_variables(**variables)
-        self._update_nuisance_parameters(**nps)
-
-        fwm_variables = {v: vois[v] for v in variables if v in self.forward_model.variables}
-        em_variables = {v: vois[v] for v in variables if v in self.error_model.variables}
+        fwm_variables = {v: variables[v] for v in variables if v in self.forward_model.variables}
+        em_variables = {v: variables[v] for v in variables if v in self.error_model.variables}
         mock_data = self.forward_model(**fwm_variables)
         
         return self.error_model.log_prob(mock_data=mock_data, **em_variables)
 
     def _evaluate_gradient(self, **variables):
 
-        vois, nps = self._split_variables(**variables)
-        self._update_nuisance_parameters(**nps)
-        
-        fwm_variables = {v: vois[v] for v in variables if v in self.forward_model.variables}
-        em_variables = {v: vois[v] for v in variables if v in self.error_model.variables}
+        fwm_variables = {v: variables[v] for v in variables if v in self.forward_model.variables}
+        em_variables = {v: variables[v] for v in variables if v in self.error_model.variables}
         mock_data = self.forward_model(**fwm_variables)
         dfm = self.forward_model.jacobi_matrix(**fwm_variables)
         emgrad = self.error_model.gradient(mock_data=mock_data, **em_variables)
@@ -105,7 +85,7 @@ class AbstractLikelihood(AbstractISDPDF):
 
         result = self.clone()
 
-        result.fix_variables(**fixed_vars)
+        result.fix_variables(**result._get_variables_intersection(fixed_vars))
         
         return result
 

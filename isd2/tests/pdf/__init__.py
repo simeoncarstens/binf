@@ -5,6 +5,11 @@ from csb.statistics.pdf.parameterized import Parameter
 from isd2.pdf import AbstractISDPDF
 
 
+class MockParameter(Parameter):
+
+    pass
+
+
 class MockISDPDF(AbstractISDPDF):
 
     def __init__(self, name='MockISDPDF'):
@@ -63,9 +68,40 @@ class testAbstractISDPDF(unittest.TestCase):
         self.assertTrue(cond2['y'].value == 2.0)
         self.assertTrue(len(cond2.variables) == 0)
         self.assertTrue(cond2.log_prob() == -29.0)
+
+    def testSet_fixed_variables_from_pdf(self):
+
+        pdf1 = MockISDPDF()
+        pdf2 = MockISDPDF()
+
+        pdf1.fix_variables(y=2.0)
+        pdf2.set_fixed_variables_from_pdf(pdf1)
+        self.assertTrue('y' in pdf2.parameters)
+        self.assertTrue(pdf2['y'].value == 2.0)
+
+    def testLog_prob(self):
+
+        pdf = MockISDPDF()
+        self.assertTrue(pdf.log_prob(x=3, y=2) == -13.0)
+
+    def testUpdate_var_param_types(self):
+
+        pdf = MockISDPDF()
+        pdf.update_var_param_types(x=MockParameter)
+        self.assertTrue(pdf.var_param_types['x'] == MockParameter)
+
+    def testComplete_variables(self):
+
+        pdf = MockISDPDF()
+        pdf.fix_variables(x=7.0)
+        variables = {'y': 2.34}
+        pdf._complete_variables(variables)
+        self.assertTrue('y' in variables)
+        self.assertTrue(variables['y'] == 2.34)
+        self.assertTrue('x' in variables)
+        self.assertTrue(variables['x'] == 7.0)
+
         
-
-
 if __name__ == '__main__':
 
     unittest.main()
