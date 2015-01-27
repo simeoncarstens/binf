@@ -35,6 +35,14 @@ class Likelihood(AbstractISDPDF):
             self[p.name] = p.__class__(p.value, p.name, self[p.name])
             p.bind_to(self[p.name])
 
+    def _setup_fixed_variable_parameters(self):
+
+        for model in (self._forward_model, self._error_model):
+            for p in model.get_params():
+                var_param_type = model.var_param_types[p.name]
+                model[p.name] = var_param_type(self[p.name].value, p.name)
+                model[p.name].bind_to(self[p.name])
+
     @property
     def forward_model(self):
         return self._forward_model
@@ -81,3 +89,8 @@ class Likelihood(AbstractISDPDF):
         
         return copy
 
+    def fix_variables(self, **fixed_vars):
+
+        super(Likelihood, self).fix_variables(**fixed_vars)
+
+        self._setup_fixed_variable_parameters()
