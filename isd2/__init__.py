@@ -126,46 +126,6 @@ class ArrayParameter(AbstractParameter):
 
 
     
-# def memoize(f):
-#     return f
-    
-
-# def memoize(f):
-
-#     from copy import deepcopy, copy
-    
-#     def decorated_f(self, **variables):
-
-#         if not '_last_variable_values' in f.__dict__ \
-#            or not check_variable_equality(f._last_variable_values, variables):
-#             result = f(self, **variables)
-#             f._last_variable_values = deepcopy(variables)
-#             f._last_result = result
-#             return result
-#         else:
-#             return f._last_result
-
-#     return decorated_f
-
-
-# def memoize(f):
-
-#     import md5
-    
-#     def decorated_f(self, **variables):
-
-#         hashes = {key: md5.new(value).digest() if not type(value) == float else hash(value) for key, value in variables.items()}
-        
-#         if '_last_variable_hashes' in f.__dict__ and hashes == f._last_variable_hashes:
-#             return f._last_result
-        
-#         from copy import deepcopy
-#         result = f(self, **variables)
-#         f._last_variable_hashes = hashes
-#         f._last_result = result
-#         return result
-        
-#     return decorated_f
 
 import functools, hashlib
 
@@ -243,21 +203,3 @@ class memoize(object):
         "Return the wrapped function or method's docstring."
         return self.method.__doc__
 
-
-
-# def check_variable_equality(variables1, variables2):
-
-#     if len(variables1) != len(variables2):
-#         return False
-#     elif variables1.keys() != variables2.keys() and len(variables2) > 0:
-#         raise Exception('Uh oh... that\'s a bug! Please send traceback to Simeon.')
-#     else:
-#         for key, value in variables1.items():
-#             if type(value) == np.ndarray and len(value) > 1:
-#                 if not np.all(value == variables2[key]):
-#                     return False
-#             else:
-#                 if not value == variables2[key]:
-#                     return False
-
-#     return True
