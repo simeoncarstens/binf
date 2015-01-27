@@ -1,3 +1,6 @@
+'''
+'''
+
 import unittest
 
 from csb.statistics.pdf.parameterized import Parameter
