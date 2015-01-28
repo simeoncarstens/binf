@@ -18,10 +18,25 @@ class Likelihood(AbstractISDPDF):
         self._forward_model = forward_model
         self._error_model = error_model
         self._data = data
+        self._components = {'error model': self.error_model, 'forward model': self.forward_model}
 
+        self._setup_variables()
+        self.update_var_param_types(**self._get_component_var_param_types())
         self._setup_parameters()
         
         self._set_original_variables()
+
+    def _get_component_var_param_types(self):
+
+        return {var: c._var_param_types[var] for c in self._components.values() 
+                for var in c.variables if not var == 'mock_data'}
+
+    def _setup_variables(self):
+
+        for c in self._components.values():
+            for var in c.variables:
+                if not var in self.variables and not var == 'mock_data':
+                    self._register_variable(var, var in c.differentiable_variables)
 
     def _setup_parameters(self):
 
@@ -34,14 +49,6 @@ class Likelihood(AbstractISDPDF):
             self._register(p.name)
             self[p.name] = p.__class__(p.value, p.name, self[p.name])
             p.bind_to(self[p.name])
-
-    def _setup_fixed_variable_parameters(self):
-
-        for model in (self._forward_model, self._error_model):
-            for p in model.get_params():
-                var_param_type = model.var_param_types[p.name]
-                model[p.name] = var_param_type(self[p.name].value, p.name)
-                model[p.name].bind_to(self[p.name])
 
     @property
     def forward_model(self):
@@ -84,13 +91,20 @@ class Likelihood(AbstractISDPDF):
                               self.forward_model.clone(),
                               self.error_model.clone(),
                               self.data)
-
-        copy.set_fixed_variables_from_pdf(self)
         
         return copy
 
     def fix_variables(self, **fixed_vars):
 
-        super(Likelihood, self).fix_variables(**fixed_vars)
+        for var, value in fixed_vars.items():
+            self._register(var)
+            self._delete_variable(var)
+            self[var] = self._var_param_types[var](value, var)
+            for c in self._components.values():
+                if var in c.variables:
+                    c.fix_variables(**{var: value})
+                    c[var].bind_to(self[var])
+                    
 
-        self._setup_fixed_variable_parameters()
+
+        
