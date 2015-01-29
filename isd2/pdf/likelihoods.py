@@ -6,6 +6,7 @@ import numpy
 
 from csb.numeric import exp
 
+from isd2.core.composed import _get_component_var_param_types, _setup_variables, _setup_parameters, fix_variables
 from isd2.pdf import AbstractISDPDF
 
 
@@ -26,29 +27,13 @@ class Likelihood(AbstractISDPDF):
         
         self._set_original_variables()
 
-    def _get_component_var_param_types(self):
+    _get_component_var_param_types = _get_component_var_param_types
 
-        return {var: c._var_param_types[var] for c in self._components.values() 
-                for var in c.variables if not var == 'mock_data'}
+    _setup_variables = _setup_variables
 
-    def _setup_variables(self):
+    _setup_parameters = _setup_parameters
 
-        for c in self._components.values():
-            for var in c.variables:
-                if not var in self.variables and not var == 'mock_data':
-                    self._register_variable(var, var in c.differentiable_variables)
-
-    def _setup_parameters(self):
-
-        for p in self._forward_model.get_params():
-            self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name, self[p.name])
-            p.bind_to(self[p.name])
-
-        for p in self._error_model.get_params():
-            self._register(p.name)
-            self[p.name] = p.__class__(p.value, p.name, self[p.name])
-            p.bind_to(self[p.name])
+    fix_variables = fix_variables
 
     @property
     def forward_model(self):
@@ -93,18 +78,3 @@ class Likelihood(AbstractISDPDF):
                               self.data)
         
         return copy
-
-    def fix_variables(self, **fixed_vars):
-
-        for var, value in fixed_vars.items():
-            self._register(var)
-            self._delete_variable(var)
-            self[var] = self._var_param_types[var](value, var)
-            for c in self._components.values():
-                if var in c.variables:
-                    c.fix_variables(**{var: value})
-                    c[var].bind_to(self[var])
-                    
-
-
-        
