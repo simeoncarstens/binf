@@ -12,7 +12,6 @@ from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.singlechain import HMCSampler
 from csb.numeric.integrators import FastLeapFrog
 
-from mpsampling import MPFastHMCSampler
 from fastcode import FastHMCSampler
 
 
