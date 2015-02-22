@@ -5,11 +5,14 @@ provides information about covalent bonds (in proteins)
 """
 ## TODO: remove hard-wired code
 ## TODO: move test code to test folder
+## TODO: rename Stereochemistry to CovalentGraph
 
 from isd.Connectivity import load_connectivity
 from isd2.universe.Universe import Universe
 from isd2.core import Node
+
 from scipy import sparse
+
 from collections import defaultdict
 
 import numpy as np
@@ -106,7 +109,7 @@ class Stereochemistry(object):
         """
         return [n for n in self.nodes.values() if n.is_root()]
 
-    def connectivity(self, atoms=None):
+    def as_sparse_matrix(self, atoms=None):
         """
         Returns a sparse connectivity matrix of an AtomCollection which defaults
         to the entire Universe. This can also be viewed as an adjacency matrix of
@@ -114,18 +117,17 @@ class Stereochemistry(object):
         """
         atoms = atoms if atoms is not None else Universe.get()
         indices = set([atom.index for atom in atoms])
-
-        connectivity = sparse.lil_matrix((len(atoms),len(atoms)),dtype=np.int8)
+        bonds = sparse.lil_matrix((len(atoms),len(atoms)),dtype=np.int8)
 
         for i in indices:
 
             if not i in self.bonds: continue
 
-            j = list(set(self.bonds[i]) & indices)
+            j = np.array(list(set(self.bonds[i]) & indices))
             
-            connectivity[i,j] = 1
+            bonds[i,j] = 1
 
-        return sparse.csr_matrix(connectivity)
+        return sparse.csr_matrix(bonds)
     
 if __name__ == '__main__':
 
@@ -140,7 +142,7 @@ if __name__ == '__main__':
     stereochemistry = Stereochemistry()
     stereochemistry.update(iter(universe))
 
-    c = stereochemistry.connectivity()
+    c = stereochemistry.as_sparse_matrix()
 
     d = csgraph.dijkstra(c)
 
