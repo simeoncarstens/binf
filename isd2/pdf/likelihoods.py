@@ -19,9 +19,25 @@ class Likelihood(AbstractISDPDF):
         self._error_model = error_model
         self._data = data
 
+        self._inherit_variables()
+
         self._setup_parameters()
         
         self._set_original_variables()
+
+    def _inherit_variables(self):
+
+        fm = self._forward_model
+        em = self._error_model
+        
+        for v in fm.variables:
+            self._register_variable(v, differentiable=v in fm.differentiable_variables)
+            self.update_var_param_types(**{v: fm.var_param_types[v]})
+
+        for v in em.variables:
+            if not v == 'mock_data':
+                self._register_variable(v, differentiable=v in em.differentiable_variables)
+                self.update_var_param_types(**{v: em.var_param_types[v]})
 
     def _setup_parameters(self):
 
@@ -85,7 +101,7 @@ class Likelihood(AbstractISDPDF):
                               self.error_model.clone(),
                               self.data)
 
-        copy.set_fixed_variables_from_pdf(self)
+        # copy.set_fixed_variables_from_pdf(self)
         
         return copy
 
@@ -93,4 +109,15 @@ class Likelihood(AbstractISDPDF):
 
         super(Likelihood, self).fix_variables(**fixed_vars)
 
-        self._setup_fixed_variable_parameters()
+        # self._setup_fixed_variable_parameters()
+
+    def conditional_factory(self, **fixed_vars):
+
+        fwm = self.forward_model.clone()
+        fwm.fix_variables(**fwm._get_variables_intersection(**fixed_vars))
+        em = self.error_model.conditional_factory(**self.error_model._get_variables_intersection(**fixed_vars))
+        result = self.__class__(self.name, fwm, em)
+        result.fix_variables(**self._get_variables_intersection(fixed_vars))
+
+        return result            
+

@@ -306,7 +306,7 @@ class cThresholdedPairwiseDistanceMatrix(ThresholdedDistanceMatrix):
 
         from isd.NBList import NBList
         
-        self._grid = NBList(self.threshold, 90, 500, N).ctype
+        self._grid = NBList(self.threshold, 90, 1000, N).ctype
 
         from isd._isd import atom, universe
 
@@ -395,17 +395,17 @@ if __name__ == '__main__':
     X = np.random.random((M,3))
     Y = np.random.random((N,3))
 
-    from isd.future.Universe import universe_from_pdbentry, Universe
+    # from isd.future.Universe import universe_from_pdbentry, Universe
 
-    pdbcode = '1OEL'
-    pdbcode = '1FNM'
-    universe = Universe.get()
-    if not len(universe):
-        print 'loading PDB entry', pdbcode
-        universe = universe_from_pdbentry(pdbcode, atom_names=['CA'])
+    # pdbcode = '1OEL'
+    # pdbcode = '1FNM'
+    # universe = Universe.get()
+    # if not len(universe):
+    #     print 'loading PDB entry', pdbcode
+    #     universe = universe_from_pdbentry(pdbcode, atom_names=['CA'])
 
-    X = Y = universe.coordinates
-    M = N = len(universe)
+    # X = Y = universe.coordinates
+    # M = N = len(universe)
 
     ## distance threshold
     
