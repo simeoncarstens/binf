@@ -20,8 +20,15 @@ class AbstractForwardModel(AbstractModel):
     def data(self):
         return self._data
 
+    def jacobi_matrix(self, **variables):
+	
+	self._complete_variables(variables)
+        result = self._evaluate_jacobi_matrix(**variables)
+
+	return result
+
     @abstractmethod
-    def jacobi_matrix(self, **model_parameters):
+    def _evaluate_jacobi_matrix(self, **model_parameters):
 
         self._check_differentiability(**model_parameters)
 
