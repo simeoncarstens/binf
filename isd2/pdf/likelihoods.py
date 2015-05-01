@@ -11,13 +11,12 @@ from isd2.pdf import AbstractISDPDF
 
 class Likelihood(AbstractISDPDF):
 
-    def __init__(self, name, forward_model, error_model, data):
+    def __init__(self, name, forward_model, error_model):
 
         super(Likelihood, self).__init__(name)
         
         self._forward_model = forward_model
         self._error_model = error_model
-        self._data = data
 
         self._inherit_variables()
 
@@ -114,10 +113,11 @@ class Likelihood(AbstractISDPDF):
     def conditional_factory(self, **fixed_vars):
 
         fwm = self.forward_model.clone()
-        fwm.fix_variables(**fwm._get_variables_intersection(**fixed_vars))
-        em = self.error_model.conditional_factory(**self.error_model._get_variables_intersection(**fixed_vars))
+        # fwm.fix_variables(**fwm._get_variables_intersection(**fixed_vars))
+	fwm.fix_variables(**fwm._get_variables_intersection(fixed_vars))
+        em = self.error_model.conditional_factory(**self.error_model._get_variables_intersection(fixed_vars))
         result = self.__class__(self.name, fwm, em)
-        result.fix_variables(**self._get_variables_intersection(fixed_vars))
+        result.fix_variables(**result._get_variables_intersection(fixed_vars))
 
         return result            
 
