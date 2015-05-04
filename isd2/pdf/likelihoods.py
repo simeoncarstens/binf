@@ -66,10 +66,6 @@ class Likelihood(AbstractISDPDF):
     def error_model(self):
         return self._error_model
 
-    @property
-    def data(self):
-        return self._data
-
     def _split_variables(self, variables):
 
         fwm_variables = {v: variables[v] for v in variables if v in self.forward_model.variables}
