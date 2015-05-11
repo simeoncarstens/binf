@@ -54,7 +54,7 @@ class MockForwardModel(AbstractForwardModel):
 
         return b * numpy.array([1.0, 2.0, 3.0])
 
-    def jacobi_matrix(self, X, b):
+    def _evaluate_jacobi_matrix(self, X, b):
 
         return b * numpy.array([[2.0, 1.0, 1.0],
                                 [1.0, 2.0, 2.0]])
@@ -66,13 +66,12 @@ class MockForwardModel(AbstractForwardModel):
 
 class NoAutomaticParamsLikelihood(Likelihood):
 
-    def __init__(self, name, forward_model, error_model, data):
+    def __init__(self, name, forward_model, error_model):
 
         super(Likelihood, self).__init__(name)
         
         self._forward_model = forward_model
         self._error_model = error_model
-        self._data = data
 
         self._set_original_variables()
         
@@ -82,12 +81,12 @@ class testLikelihood(unittest.TestCase):
     def setUp(self):
 
         self.L = Likelihood('testL', MockForwardModel(parameters=[Parameter(2.0, 'ParamA')]), 
-                            MockErrorModel(), None)
+                            MockErrorModel())
 
     def testSetup_parameters(self):
 
         L = NoAutomaticParamsLikelihood('test', MockForwardModel(parameters=[Parameter(2.0, 'ParamA')]), 
-                                        MockErrorModel(), None)
+                                        MockErrorModel())
 
         L._setup_parameters()
         self.assertTrue('ParamA' in L.parameters)
