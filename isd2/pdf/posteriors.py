@@ -25,7 +25,7 @@ class Posterior(AbstractISDPDF):
         self._components = dict(**self.priors)
         self._components.update(**self.likelihoods)
         self._register_component_variables(*self._get_component_variables())
-
+        
         self._set_original_variables()
 
     def _setup_parameters(self):
@@ -49,6 +49,7 @@ class Posterior(AbstractISDPDF):
     def _get_component_variables(self):
 
         vars = []
+        fixed_vars = []
         diff_vars = []
         var_param_types = []
 
@@ -58,13 +59,23 @@ class Posterior(AbstractISDPDF):
                 var_param_types.append(self._components[c].var_param_types[v])
                 if v in self._components[c].differentiable_variables:
                     diff_vars.append(v)
+            for p in self._components[c].parameters:
+                if p in self._components[c]._original_variables:
+                    fixed_vars.append(p)
+                    ## Might or might not work, atm I'm not clear about the status 
+                    ## of the differentiable_variable thing
+                    # if p in self._components[c].differentiable_variables:
+                    #     diff_vars.append(v) 
 
-        return set(vars), set(diff_vars), var_param_types
+        return set(vars), set(fixed_vars), set(diff_vars), var_param_types
 
-    def _register_component_variables(self, vars, diff_vars, var_param_types):
+    def _register_component_variables(self, vars, fixed_vars, diff_vars, var_param_types):
 
         for var in vars:
             self._register_variable(str(var), differentiable=var in diff_vars)
+
+        for fixed_var in fixed_vars:
+            self._original_variables.update({fixed_var})
 
         self.update_var_param_types(**{var: _type for var, _type in zip(vars, var_param_types)})
 

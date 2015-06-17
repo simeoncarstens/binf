@@ -32,10 +32,12 @@ class AbstractISDNamedCallable(object):
         self._variables = set()
         self._differentiable_variables = set()
         self._var_param_types = {}
+        self._original_variables = set()
 
     def _set_original_variables(self):
 
-        self._original_variables = self.variables.copy()
+        # self._original_variables = self.variables.copy()
+        self._original_variables.update(self.variables)
 
     def _register_variable(self, name, differentiable=False):
 
