@@ -12,7 +12,6 @@ class PDFWrapper(AbstractDensity):
 
     def log_prob(self, x):
 
-        # print "pdfwrapper:", self.isd2pdf.likelihoods['contacts']['lammda'], self.isd2pdf._components['contacts']['lammda']
         return self.isd2pdf.log_prob(**{self.vn: x})
 
     def gradient(self, x, t=0.0):

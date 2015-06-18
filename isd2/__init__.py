@@ -71,8 +71,11 @@ class AbstractISDNamedCallable(object):
     def name(self):
         return self._name
 
-    def __call__(self, **variables):        
+    def __call__(self, **variables):
 
+        if len(variables) != len(self.variables):
+            raise ValueError("Function called with {} arguments instead of {}!".format(len(variables), 
+                                                                                       len(self.variables)))
         self._complete_variables(variables)
         result = self._evaluate(**variables)
 
@@ -94,6 +97,9 @@ class AbstractISDNamedCallable(object):
 
     def gradient(self, **variables):
 
+        if len(variables) != len(self.variables):
+            raise ValueError("Function called with {} arguments instead of {}!".format(len(variables), 
+                                                                                       len(self.variables)))
         self._complete_variables(variables)
         result = self._evaluate_gradient(**variables)
         
