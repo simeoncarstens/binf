@@ -137,10 +137,10 @@ if __name__ == '__main__':
 
     universe = Universe.get()
     if universe.is_empty():
-        universe = universe_from_pdbentry('1FNM')
+        universe = universe_from_pdbentry('1UBQ')
 
     stereochemistry = Stereochemistry()
-    stereochemistry.update(iter(universe))
+    stereochemistry.update(universe)
 
     c = stereochemistry.as_sparse_matrix()
 
