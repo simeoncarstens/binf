@@ -1,12 +1,15 @@
+import numpy as np, os
+
 from csb.io import tsv
 from csb.bio.structure import ChemElements
 
 from scipy.spatial import cKDTree
+from scipy import sparse
 
 class BondDefinition(object):
     """
     Stores information about covalent bonds
-    bond length (in pm) energy (in kJ/mol)
+    bond length (in picometre) energy (in kJ/mol)
     """
     tsvfile = './covalent_bonds.tsv'
 
@@ -14,7 +17,12 @@ class BondDefinition(object):
 
         self._bonds = {}
 
-    def from_tsv(self, tsvfile=BondDefinition.tsvfile, seps=['--','=']):
+        if os.path.exists(BondDefinition.tsvfile):
+            self.from_tsv()
+
+    def from_tsv(self, tsvfile=None, seps=['--','=']):
+
+        if tsvfile is None: tsvfile = BondDefinition.tsvfile
 
         tab = tsv.Table.from_tsv(tsvfile)
 
@@ -76,48 +84,73 @@ class BondDefinition(object):
 
 class BondFinder(object):
 
+    ## maximum distance between two covalently bonded atoms
+    
+    cutoff = 2.0
+
+    ## maximum number of chemical bonds that an atom can form
+
+    n_bonds = 4 + 1
+
     def __init__(self, bonddef=None):
 
         if bonddef is None: bonddef = BondDefinition()
 
         self._definition = bonddef
 
-    def find_bonds(self, atoms, default_length=1.5, tol=0.1, k_nearest=10):
+    def find_bonds(self, atoms, tol=0.1):
         """
-        Find covalent bonds based on a distance criterion.
+        Returns a list of covalent bonds based on a distance criterion.
         """
         bonddef = self._definition
-        tree    = cKDTree(atoms.coordinates)
-        cutoff  = np.ceil(max(zip(*list(bonddef))[-2])) if len(bonddef) else 0.
-        cutoff  = max(cutoff, default_length)
-        dist, ind = tree.query(atoms.coordinates, k=k_nearest,
-                               distance_upper_bound=cutoff)
+
+        elements = list(set([atom.element for atom in atoms]))
+        ideal_distances = {}
+        for a in elements:
+            for b in elements:
+                if bonddef.has_bonds(a,b):
+                    d = zip(*bonddef.get_bonds(a,b).values())[0]
+                    ideal_distances[(a,b)] = max(d)
+
+        d_max = max(ideal_distances.values())
+
+        cutoff = BondFinder.cutoff
+        if cutoff < d_max + tol:
+            cutoff = d_max + tol
+        
+        tree = cKDTree(atoms.coordinates)
+
+        ## find nearest neighbors with kd-tree (where the number of nearest
+        ## neighbors is the number of chemical bonds in biomolecules +1 for
+        ## 'self-interaction')
+        
+        distances, indices = tree.query(atoms.coordinates,
+                                        k = BondFinder.n_bonds + 1,
+                                        distance_upper_bound = cutoff)
 
         bonds = set()
 
         for i in range(len(atoms)):
 
             a = atoms[i].element
-            k = atoms[i].index
-            
-            for j, d in zip(ind[i],dist[i])[1:]:
 
-                if j == len(atoms): continue
+            ## first neighbor is the atom itself
+
+            D = distances[i][1:]
+            J = indices[i][1:]
+            mask = D!=np.inf
+            
+            for j, d in zip(J[mask],D[mask]):
 
                 b = atoms[j].element
-                l = atoms[j].index
-                
-                length = default_length
-                
-                if bonddef.has_bonds(a, b):
 
-                    lengths = np.array([bond[-2] for bond in
-                                        bonddef.get_bonds(a, b).values()])
-                    length  = lengths[np.fabs(lengths-d).argmin()]
+                if (a, b) in ideal_distances:
+                    bonded = d < ideal_distances[(a,b)] + tol
+                else:
+                    bonded = d < cutoff                
+                    print 'Bond not found:', atoms[i], atoms[j]
                     
-                if d < length + tol:
-                    bonds.add((k,l))
-                    bonds.add((l,k))
+                if bonded: bonds.add((min(i,j), max(i,j)))
 
         return bonds
 
@@ -128,19 +161,9 @@ class BondFinder(object):
         the covalent bonds. This can also be viewed as an adjacency matrix
         of an undirected graph. 
         """
-        indices = set([atom.index for atom in atoms])
-
-        connectivity = sparse.lil_matrix((len(atoms),len(atoms)),dtype=np.int8)
-
-        for i in indices:
-
-            if not i in self.bonds: continue
-
-            j = list(set(self.bonds[i]) & indices)
-            
-            connectivity[i,j] = 1
-
-        return sparse.csr_matrix(connectivity)
+        return sparse.csr_matrix((np.ones(len(bonds),np.int8),
+                                  np.transpose(list(bonds))),
+                                 shape=(len(atoms),len(atoms)))
 
 if __name__ == '__main__':
 
@@ -151,12 +174,36 @@ if __name__ == '__main__':
     
     universe = Universe.get()
     if universe.is_empty():
-        universe = universe_from_pdbentry('1FNM')
+        universe = universe_from_pdbentry('1UBQ') #FNM')
 
     bonddef = BondDefinition()
     finder  = BondFinder(bonddef)
-    bonds   = finder.find_bonds(universe, default_length=2.0, tol=0.5)
+    bonds   = finder.find_bonds(universe)
 
-    print len(bonds)
+    print '#bonds:', len(bonds)
+
+    ## convert 
+
+    connectivity = BondFinder.as_sparse_matrix(universe, bonds)
     
-    #bonds = sparse.lil_matrix((len(universe),len(universe)),dtype=np.int8)
+    ## find the number of bonds that separate all pairs of atoms by
+    ## running the Dijkstra algorithm
+
+    nbonds = csgraph.dijkstra(connectivity, directed=False)
+    print np.sum(nbonds==1.)
+    print '#{1-4 interactions}', np.sum(nbonds==4.)
+    
+    tree = csgraph.minimum_spanning_tree(connectivity).toarray(np.int8)
+    
+    from isd2.core import Node
+
+    nodes = [Node(atom) for atom in universe]
+    for i in range(len(tree)):
+        for j in np.nonzero(tree[i])[0]:
+            try:
+                nodes[j].link(nodes[i])
+            except Exception, msg:
+                try:
+                    nodes[i].link(nodes[j])
+                except Exception, msg:
+                    print msg, i, j

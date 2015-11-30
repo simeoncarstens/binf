@@ -90,6 +90,10 @@ class Node(object):
 
         if parent is None: return
 
+        if self._parent is not None:
+            msg = 'Node already linked'
+            raise ValueError(msg)
+
         self._parent = parent
 
         if self in parent._children:
