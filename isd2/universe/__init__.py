@@ -37,6 +37,8 @@ def universe_from_structure(structure, chains=None, atom_names=None):
             for name in residue:
                 if atom_names is not None and not name in atom_names: continue
                 csbatom = residue[name]
+                if csbatom.alternate:
+                    csbatom = csbatom._DisorderedAtom__rep
                 atom = factory(name, **csbatom.__dict__)
                 residue.atoms.update(name,atom)
                 atoms.append(atom)
