@@ -9,13 +9,17 @@ class Node(object):
 
         object.__init__(self)
 
-        self._node = node
+        self._info = node
         self._parent = None
         self._children = set()
 
+    def __str__(self):
+
+        return 'Node({})'.format(self._info)
+
     @property
-    def node(self):
-        return self._node
+    def info(self):
+        return self._info
 
     @property
     def parent(self):
@@ -97,7 +101,7 @@ class Node(object):
         self._parent = parent
 
         if self in parent._children:
-            print 'Warning: already linked: {0} {1}'.format(self._node, parent._node)
+            print 'Warning: already linked: {0} {1}'.format(self, parent)
         else:
             parent._children.add(self)
 
