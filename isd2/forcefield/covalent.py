@@ -17,9 +17,6 @@ class BondDefinition(object):
 
         self._bonds = {}
 
-        if os.path.exists(BondDefinition.tsvfile):
-            self.from_tsv()
-
     def from_tsv(self, tsvfile=None, seps=['--','=']):
 
         if tsvfile is None: tsvfile = BondDefinition.tsvfile
@@ -165,45 +162,141 @@ class BondFinder(object):
                                   np.transpose(list(bonds))),
                                  shape=(len(atoms),len(atoms)))
 
+def grow_tree(parent, nodes, neighbors):
+
+    while len(neighbors[parent]):
+
+        child = neighbors[parent].pop()
+        neighbors[child].remove(parent)
+
+        nodes[child].link(nodes[parent])
+
+        grow_tree(child, nodes, neighbors)
+
+def find_forest(connectivity, atoms=None):
+
+    tree = csgraph.minimum_spanning_tree(connectivity).toarray(np.int8)
+
+    if atoms is None: atoms = range(len(connectivity))
+    
+    nodes = [Node(atom) for atom in atoms]
+    bonds = (tree + tree.T).astype('i')
+    neigh = [np.nonzero(row)[0].tolist() for row in bonds]
+
+    root = 0
+
+    while 1:
+
+        grow_tree(root, nodes, neigh)
+        roots = np.nonzero(np.array(map(len, neigh)) > 1)[0]
+        if len(roots) == 0: break
+        root = roots[0]
+    
+    return [node for node in nodes if node.is_root()]
+
 if __name__ == '__main__':
 
     from isd2.universe import universe_from_pdbentry
     from isd2.universe.Universe import Universe
+    from isd2.core import Node
 
     from scipy.sparse import csgraph
     
     universe = Universe.get()
     if universe.is_empty():
-        universe = universe_from_pdbentry('1UBQ') #FNM')
+        universe = universe_from_pdbentry('1AKE') #FNM')
 
     bonddef = BondDefinition()
-    finder  = BondFinder(bonddef)
-    bonds   = finder.find_bonds(universe)
+    bonddef.from_tsv()
+
+    finder = BondFinder(bonddef)
+    bonds  = finder.find_bonds(universe)
 
     print '#bonds:', len(bonds)
 
-    ## convert 
-
     connectivity = BondFinder.as_sparse_matrix(universe, bonds)
-    
+
     ## find the number of bonds that separate all pairs of atoms by
     ## running the Dijkstra algorithm
 
     nbonds = csgraph.dijkstra(connectivity, directed=False)
-    print np.sum(nbonds==1.)
     print '#{1-4 interactions}', np.sum(nbonds==4.)
     
-    tree = csgraph.minimum_spanning_tree(connectivity).toarray(np.int8)
+    ## find covalent trees
     
-    from isd2.core import Node
+    forest = find_forest(connectivity, universe)
 
-    nodes = [Node(atom) for atom in universe]
-    for i in range(len(tree)):
-        for j in np.nonzero(tree[i])[0]:
-            try:
-                nodes[j].link(nodes[i])
-            except Exception, msg:
-                try:
-                    nodes[i].link(nodes[j])
-                except Exception, msg:
-                    print msg, i, j
+    ## collect chains
+
+    chains = []
+    
+    for tree in forest:
+        
+        residues = list(set([node.info.residue for node in tree.get_descendants()]))
+        residues.sort(lambda a, b: cmp(a.rank, b.rank))
+        chains.append(residues)
+
+    # leaves = [node for node in tree.get_descendants() if len(node.children) == 0]
+
+    print 'define dihedrals'
+
+    from collections import defaultdict
+
+    dihedrals = defaultdict(set)
+
+    for node2 in tree.get_descendants():
+
+        if node2.is_root(): continue
+
+        node1 = node2.parent
+
+        nodes0 = node2.get_siblings()
+
+        if not node1.is_root(): nodes0.insert(0, node1.parent)
+
+        for node0 in nodes0:
+
+            atoms = [node0, node1, node2]
+
+            for node3 in node2.children:
+                dihedrals[node2].add(tuple(atoms + [node3]))
+            
+    for node in dihedrals:
+        print node
+        print '\n'.join(['\t' + ' - '.join([str(n.info) for n in dihedral])
+                         for dihedral in dihedrals[node]])
+
+    from isd.Connectivity import load_connectivity
+
+    topology = load_connectivity()
+
+    for node in dihedrals:
+        residue = node.info.residue
+        residue_topology = topology[residue.type.name]
+
+        found = []
+        
+        for dihedral in dihedrals[node]:
+
+            atoms = [n.info.name for n in dihedral]
+            for i, atom in enumerate(atoms):
+                if dihedral[i].info.residue.rank == residue.rank-1:
+                    atoms[i] += '-'
+                elif dihedral[i].info.residue.rank == residue.rank + 1:
+                    atoms[i] += '+'
+
+            ## try to find dihedral in topology
+
+            for name, definition in residue_topology.dihedrals.items():
+                atoms2 = [definition['atom_{}'.format(i)] for i in range(1,5)]
+                if atoms == atoms2:
+                    break
+            else:
+                name = None
+            found.append(name)
+
+        name = '{0}{1}{2}'.format(node.info.residue.type.value,
+                                  node.info.residue.sequence_number,
+                                  node.info.name)
+        print '{0}: {1}'.format(name, ', '.join(filter(None, found)))
+
