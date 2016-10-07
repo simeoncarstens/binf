@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Classes to compute complete and incomplete distance matrices.
 """
@@ -10,15 +11,15 @@ from scipy import spatial
 
 class DistanceMatrix(object):
     """
-    Full Euclidean distance matrix. 
+    Full Euclidean distance matrix.
     """
     def __init__(self, M, N):
 
         self._shape = (int(M), int(N))
         self._init_values()
-        
+
     def _init_values(self):
-        
+
         self._values = np.zeros(self.shape)
 
     @property
@@ -72,10 +73,10 @@ class PairwiseDistanceMatrix(DistanceMatrix):
             for j in range(i+1,N):
                 yield i, j, self._values[k]
                 k += 1
-                
+
     def asarray(self):
         return spatial.distance.squareform(self._values)
-        
+
     def __getitem__(self, i, j):
         raise NotImplementedError
 
@@ -112,7 +113,7 @@ class IncompleteDistanceMatrix(DistanceMatrix):
     @indices.setter
     def indices(self, pairs):
 
-        if not len(pairs): return 
+        if not len(pairs): return
 
         i, j = zip(*pairs)
         M, N = self.shape
@@ -130,7 +131,7 @@ class IncompleteDistanceMatrix(DistanceMatrix):
 
         j = j[np.argsort(i)]
         i = np.sort(i)
-        
+
         self._indices = i, j
         self._values = np.zeros(len(i))
 
@@ -158,18 +159,18 @@ class IncompleteDistanceMatrix(DistanceMatrix):
             for i, j, r in self:
                 if r > 0.0:
                     d[i,j] = r
-            d = sparse.csr_matrix(d)                
+            d = sparse.csr_matrix(d)
         else:
             d = - np.ones(self.shape)
             i, j = self._indices
             d[i,j] = self.get()
 
-        return d 
-        
+        return d
+
     def sort_indices(self):
 
         if not len(self._indices[0]): return
-        
+
         i, j = self._indices
         k = np.argsort(i)
 
@@ -186,7 +187,7 @@ class cIncompleteDistanceMatrix(IncompleteDistanceMatrix):
     @property
     def indices(self):
         return zip(*self._indices)
-    
+
     @indices.setter
     def indices(self, pairs):
 
@@ -207,7 +208,7 @@ class cIncompleteDistanceMatrix(IncompleteDistanceMatrix):
 
         self._ctheory = distancerestraint()
         self._cdata = distances
-        
+
     def update(self, X, Y):
 
         if not (len(X), len(Y)) == self.shape:
@@ -237,13 +238,13 @@ class ThresholdedDistanceMatrix(IncompleteDistanceMatrix):
         """
         if not (len(X),len(Y)) == self.shape:
             raise ValueError
-        
+
         tree = spatial.cKDTree(X)
         d, i = tree.query(Y, k=len(Y), distance_upper_bound=self._threshold)
         m = d<np.inf
         j = np.compress(m.flatten(), i.flatten())
         i = np.repeat(np.arange(len(X)),np.sum(m,1))
-        
+
         self._values = np.compress(m.flatten(), d.flatten())
         self._indices = i, j
 
@@ -305,7 +306,7 @@ class cThresholdedPairwiseDistanceMatrix(ThresholdedDistanceMatrix):
         super(cThresholdedPairwiseDistanceMatrix, self).__init__(N, N, threshold)
 
         from isd.NBList import NBList
-        
+
         self._grid = NBList(self.threshold, 90, 1000, N).ctype
 
         from isd._isd import atom, universe
@@ -314,14 +315,14 @@ class cThresholdedPairwiseDistanceMatrix(ThresholdedDistanceMatrix):
         for i in range(N):
             atoms.append(atom())
             atoms[-1].index = i
-            
+
         universe = universe()
         universe.atoms = tuple(atoms)
         types = np.array([a.type for a in atoms], 'i')
         universe.set_types(types)
-        
+
         self._universe = universe
-        
+
     def _init_values(self):
         ## TODO: indices and distances are all stored in _values...
         self._values = np.zeros((0,3))
@@ -367,7 +368,7 @@ class cThresholdedPairwiseDistanceMatrix(ThresholdedDistanceMatrix):
         d[j,i] = v
 
         return d * (1-np.eye(self.shape[0]))
-        
+
 class SillyThresholdedDistanceMatrix(ThresholdedDistanceMatrix):
 
     def update(self, X, Y):
@@ -385,7 +386,7 @@ def mytimeit(stmt):
 
     from time import clock
     t = clock()
-    exec stmt
+    exec(stmt)
     return clock()-t
 
 if __name__ == '__main__':
@@ -408,12 +409,12 @@ if __name__ == '__main__':
     # M = N = len(universe)
 
     ## distance threshold
-    
+
     threshold = 3.8
     threshold = 7.5
-    
+
     shape = (N, N)
-    
+
     a = DistanceMatrix(*shape)
     b = PairwiseDistanceMatrix(N)
 
@@ -426,17 +427,17 @@ if __name__ == '__main__':
     g = SillyThresholdedDistanceMatrix(a.shape[0], a.shape[1], threshold)
     h = cThresholdedPairwiseDistanceMatrix(shape[0], threshold)
 
-    print "full distance matrix", mytimeit("for i in range(100): a.update(Y,Y)")
-    print "pairwise distance matrix", mytimeit("for i in range(100): b.update(Y)")
-    print "kdTree", mytimeit("for i in range(100): e.update(Y,Y)")
-    print "nonbonded list", mytimeit("for i in range(100): f.update(Y,Y)")
-    print "silly", mytimeit("for i in range(100): g.update(Y,Y)")
-    print "nonbonded pairwise", mytimeit("for i in range(100): h.update(Y)")
-    
+    print("full distance matrix", mytimeit("for i in range(100): a.update(Y,Y)"))
+    print("pairwise distance matrix", mytimeit("for i in range(100): b.update(Y)"))
+    print("kdTree", mytimeit("for i in range(100): e.update(Y,Y)"))
+    print("nonbonded list", mytimeit("for i in range(100): f.update(Y,Y)"))
+    print("silly", mytimeit("for i in range(100): g.update(Y,Y)"))
+    print("nonbonded pairwise", mytimeit("for i in range(100): h.update(Y)"))
+
     c = IncompleteDistanceMatrix(a.shape[0], a.shape[1], e.indices)
     c2 = cIncompleteDistanceMatrix(a.shape[0], a.shape[1], e.indices)
-    print "incomplete distance matrix", mytimeit("for i in range(100): c.update(Y,Y)")
-    print "c incomplete distance matrix", mytimeit("for i in range(100): c2.update(Y,Y)")
+    print("incomplete distance matrix", mytimeit("for i in range(100): c.update(Y,Y)"))
+    print("c incomplete distance matrix", mytimeit("for i in range(100): c2.update(Y,Y)"))
 
     A = a.asarray()
     B = b.asarray()
@@ -446,17 +447,17 @@ if __name__ == '__main__':
     F = f.asarray()
     G = g.asarray()
     H = h.asarray()
-    
-    print 'A==B', np.all(A==B)
+
+    print('A==B', np.all(A==B))
     M = A <= e.threshold
     E2 = M * A - (1-M)
-    print np.all(E==E2), np.all(E==F), np.all(E==G), np.all(E==H), np.all(C==H), np.all(np.fabs(C2-C)<1e-10)
+    print(np.all(E==E2), np.all(E==F), np.all(E==G), np.all(E==H), np.all(C==H), np.all(np.fabs(C2-C)<1e-10))
 
 if False:
 
     import scipy.sparse.linalg
     from scipy import sparse
-    
+
     Q = scipy.sparse.linalg.expm(c.asarray(True))
 
 if False:
@@ -464,20 +465,20 @@ if False:
 
     for i, j, d in a:
         if j > 10: continue
-        print i, j, d
+        print(i, j, d)
         if i>0 and j>5: break
 
-    print 
- 
+    print
+
     for i, j, d in b:
         if j > 10: continue
-        print i, j, d
+        print(i, j, d)
         if i>0 and j>5: break
 
-    print '\nprinting incomplete distance matrix'
+    print('\nprinting incomplete distance matrix')
 
     for k, (i, j, d) in enumerate(c):
         if k > 20: break
-        print i, j, d, A[i,j], C[i,j]
+        print(i, j, d, A[i,j], C[i,j])
 
-    print np.all(C[C>=0.]==A[C>=0.])
+    print(np.all(C[C>=0.]==A[C>=0.]))
