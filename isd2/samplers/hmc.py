@@ -90,7 +90,7 @@ class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
     def sample(self):
 
         res = super(ISD2HMCSampler, self).sample()
-
+        
         return res
 
 
@@ -123,7 +123,7 @@ class ISD2FastHMCSampler(FastHMCSampler, AuxiliarySamplerObject):
 
         if self.timestep_adaption:
             self._adapt_timestep()
-
+            
         return res.position
             
             

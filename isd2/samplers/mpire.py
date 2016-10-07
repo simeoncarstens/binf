@@ -1,7 +1,8 @@
 from abc import ABCMeta
 from mpi4py import MPI
 
-from mpsampling_p2p import AbstractMPIReplica, MPIReplicaExchangeMC, GetStateRequest, AbstractReplicaRequest, ExchangeRequest
+from mpsampling_p2p import AbstractMPIReplica, AbstractMPIReplicaExchangeMC, GetStateRequest
+from mpsampling_p2p import AbstractReplicaRequest, ExchangeRequest
 
 
 class UpdatePDFParamsRequest(AbstractReplicaRequest):
@@ -32,7 +33,7 @@ class ISDMPIReplica(AbstractMPIReplica):
             self.pdf[name].set(value)
 
 
-class MPIISD2RE(MPIReplicaExchangeMC):
+class MPIISD2RE(AbstractMPIReplicaExchangeMC):
 
     __metaclass__ = ABCMeta
     
@@ -89,7 +90,7 @@ class MPIISD2RE(MPIReplicaExchangeMC):
 
     def _get_target_replica_state(self):
 
-        request = GetStateRequest(self.rank)
+        request = GetStateRequest(self.id_offset - 1)
         self.comm.send(request, dest=self.id_offset + self._target_replica_id)
         state = self.comm.recv(source=self.id_offset + self._target_replica_id)
 
