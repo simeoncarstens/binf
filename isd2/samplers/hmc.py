@@ -15,7 +15,7 @@ from csb.numeric.integrators import FastLeapFrog
 from fastcode import FastHMCSampler
 
 
-HMCSampleStats = namedtuple('HMCSampleStats', 'accepted total')
+HMCSampleStats = namedtuple('HMCSampleStats', 'accepted total stepsize')
 
 
 class AuxiliarySamplerObject(object):
@@ -55,7 +55,7 @@ class AuxiliarySamplerObject(object):
 
     def get_last_draw_stats(self):
 
-        return HMCSampleStats(self._accepted, self._nmoves)
+        return HMCSampleStats(self._accepted, self._nmoves, self.timestep)
 
     @property
     def sampling_stats(self):
