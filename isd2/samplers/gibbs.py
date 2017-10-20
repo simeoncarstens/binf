@@ -102,7 +102,7 @@ class GibbsSampler(AbstractSingleChainMC):
 
     def get_last_draw_stats(self):
 
-        return {k: v.get_last_draw_stats() for k, v in self.subsamplers.items() 
+        return {k: v.get_last_draw_stats()[k] for k, v in self.subsamplers.items() 
                 if 'get_last_draw_stats' in dir(v)}
 
     @property

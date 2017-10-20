@@ -3,6 +3,7 @@ This module contains samplers used in ISD.
 We should try to reuse the samplers in CSB.
 """
 
+from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.singlechain import AbstractSingleChainMC
 
 
@@ -36,7 +37,16 @@ class AbstractISD2SingleChainMC(AbstractSingleChainMC):
 
     def __init__(self, pdf, state, temperature=1.0):
 
-        super(AbstractISD2SingleChainMC, self).__init__(pdf, State(state.position), temperature)
+        super(AbstractISD2SingleChainMC, self).__init__(pdf,
+                                                        State(state.position),
+                                                        temperature)
+        
+    @AbstractSingleChainMC.state.setter
+    def state(self, value):
+        if not isinstance(value, State):
+            value = State(value)
+            
+        self._state = value
 
     def sample(self):
 
