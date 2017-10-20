@@ -3,14 +3,15 @@ import unittest, numpy
 from isd2.tests.pdf import MockISDPDF
 from isd2.samplers import ISDState
 from isd2.samplers.gibbs import GibbsSampler
-from isd2.samplers.hmc import ISD2FastHMCSampler
+from isd2.samplers.hmc import ISD2HMCSampler
 
 class MockSampler(object):
 
-    def __init__(self):
+    def __init__(self, variable_name):
 
         self.pdf = None
         self._state = 5.0
+        self.variable_name = variable_name
 
     @property
     def state(self):
@@ -21,7 +22,7 @@ class MockSampler(object):
 
     def get_last_draw_stats(self):
 
-        return {'testlastdrawstats{}'.format(self.state): self.state}
+        return {self.variable_name: {'testlastdrawstats{}'.format(self.state): self.state}}
 
     @property
     def sampling_stats(self):
@@ -41,7 +42,7 @@ class testGibbsSampler(unittest.TestCase):
     def _create_sampler(self):
 
         return GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': 3.0}),
-                            {'x': MockSampler(), 'y': MockSampler()})
+                            {'x': MockSampler('x'), 'y': MockSampler('y')})
 
     def testSetup_conditional_pdfs(self):
 
@@ -71,7 +72,7 @@ class testGibbsSampler(unittest.TestCase):
 
         gips = self._create_sampler()
         
-        new_sampler = MockSampler()
+        new_sampler = MockSampler('x')
         new_sampler.pdf = MockISDPDF()
         new_sampler.pdf['ParamA'].set(23.0)
         gips.update_samplers(x=new_sampler)
@@ -81,8 +82,8 @@ class testGibbsSampler(unittest.TestCase):
     def testUpdate_subsampler_states(self):
 
         gips = GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': numpy.array([3.0])}),
-                            {'x': MockSampler(), 
-                             'y': ISD2FastHMCSampler(MockISDPDF(), numpy.array([1.0]), 0.1, 12)})
+                            {'x': MockSampler('x'), 
+                             'y': ISD2HMCSampler(MockISDPDF(), numpy.array([1.0]), 0.1, 12)})
 
         gips.state.update_variables(x=5.0)
         gips.state.update_variables(y=numpy.array([2.3]))
