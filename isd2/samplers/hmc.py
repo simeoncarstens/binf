@@ -15,7 +15,7 @@ from csb.numeric.integrators import FastLeapFrog
 from fastcode import FastHMCSampler
 
 
-HMCSampleStats = namedtuple('HMCSampleStats', 'accepted total stepsize')
+HMCSampleStats = namedtuple('HMCSampleStats', 'accepted stepsize')
 
 
 class AuxiliarySamplerObject(object):
@@ -55,7 +55,8 @@ class AuxiliarySamplerObject(object):
 
     def get_last_draw_stats(self):
 
-        return HMCSampleStats(self._accepted, self._nmoves, self.timestep)
+        return {self.variable_name(): HMCSampleStats(self.last_move_accepted,
+                                                     self.timestep)}
 
     @property
     def sampling_stats(self):
@@ -64,42 +65,13 @@ class AuxiliarySamplerObject(object):
 
         return OrderedDict(**{'HMC acceptance rate': self.acceptance_rate, 
                               'HMC timestep': self.timestep, 
-                              'HMC pseudo-energy': self.energy})
-    
+                              'HMC pseudo-energy': self.energy})    
 
 
 class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
     '''
     It would be nice to subclass all ISD2 samplers from isd2.samplers.AbstractISD2SingleChainMC,
-    but obviously also from their corresponding CSB classes, e.g. this class should
-    be subclassed from both AbstractISD2SingleChainMC and 
-    csb.statistics.samplers.mc.singlechain.HMCSampler, resulting in diamond inheritance,
-    which is bad.
-    '''
-
-    def __init__(self, pdf, state, timestep, nsteps,
-                 mass_matrix=None, integrator=FastLeapFrog, temperature=1.0):
-
-        from isd2.pdf import AbstractISDPDF
-        
-        wrapped_pdf = pdf if not isinstance(pdf, AbstractISDPDF) else PDFWrapper(pdf)
-        wrapped_state = state if 'position' in dir(state) else State(state)
-        super(ISD2HMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
-                                             timestep, nsteps, mass_matrix, integrator, temperature)
-
-    def sample(self):
-
-        res = super(ISD2HMCSampler, self).sample()
-        
-        return res
-
-
-class ISD2FastHMCSampler(FastHMCSampler, AuxiliarySamplerObject):
-    '''
-    It would be nice to subclass all ISD2 samplers from isd2.samplers.AbstractISD2SingleChainMC,
-    but obviously also from their corresponding CSB classes, e.g. this class should
-    be subclassed from both AbstractISD2SingleChainMC and 
-    csb.statistics.samplers.mc.singlechain.HMCSampler, resulting in diamond inheritance,
+    but obviously also ritance,
     which is bad.
     '''
 
@@ -111,21 +83,21 @@ class ISD2FastHMCSampler(FastHMCSampler, AuxiliarySamplerObject):
         
         wrapped_pdf = pdf if not isinstance(pdf, AbstractISDPDF) else PDFWrapper(pdf)
         wrapped_state = state if 'position' in dir(state) else State(state)
-        super(ISD2FastHMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
+        super(ISD2HMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
                                                  timestep, nsteps)
 
         self.timestep_adaption = timestep_adaption
         self.adaption_uprate = adaption_uprate
         self.adaption_downrate = adaption_downrate
 
-        self._variable_name = None
+        self._variable_name = variable_name
 
     def variable_name(self):
         return 'HMC' if self._variable_name is None else self._variable_name
 
     def sample(self):
         
-        res = super(ISD2FastHMCSampler, self).sample()
+        res = super(ISD2HMCSampler, self).sample()
 
         if self.timestep_adaption:
             self._adapt_timestep()
