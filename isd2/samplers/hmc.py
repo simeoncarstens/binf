@@ -75,9 +75,8 @@ class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
     which is bad.
     '''
 
-    def __init__(self, pdf, state, timestep, nsteps, 
-                 timestep_adaption=True, adaption_uprate=1.05, adaption_downrate=0.95,
-                 variable_name=None):
+    def __init__(self, pdf, state, timestep, nsteps, timestep_adaption_limit=0,
+                 adaption_uprate=1.05, adaption_downrate=0.95, variable_name=None):
 
         from isd2.pdf import AbstractISDPDF
         
@@ -86,11 +85,12 @@ class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
         super(ISD2HMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
                                                  timestep, nsteps)
 
-        self.timestep_adaption = timestep_adaption
+        self.timestep_adaption_limit = timestep_adaption_limit
         self.adaption_uprate = adaption_uprate
         self.adaption_downrate = adaption_downrate
 
         self._variable_name = variable_name
+        self.counter = 0
 
     def variable_name(self):
         return 'HMC' if self._variable_name is None else self._variable_name
@@ -99,9 +99,10 @@ class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
         
         res = super(ISD2HMCSampler, self).sample()
 
-        if self.timestep_adaption:
+        if self.counter < self.timestep_adaption_limit:
             self._adapt_timestep()
-            
+        self.counter += 1
+        
         return res.position
 
     @property
