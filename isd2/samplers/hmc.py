@@ -17,6 +17,36 @@ from fastcode import FastHMCSampler
 
 HMCSampleStats = namedtuple('HMCSampleStats', 'accepted stepsize')
 
+class NoMMHMCSampler(HMCSampler):
+
+    def __init__(self, pdf, state, gradient, timestep, nsteps,
+                 mass_matrix=None, integrator=FastLeapFrog, temperature=1.):
+        
+        super(HMCSampler, self).__init__(pdf, state, temperature)
+        
+        self._timestep = None
+        self.timestep = timestep
+        self._nsteps = None
+        self.nsteps = nsteps
+        self._mass_matrix = None
+        self._momentum_covariance_matrix = None
+        self._integrator = integrator
+        self._gradient = gradient
+        self._propagator = self._propagator_factory()
+
+    def _propagator_factory(self):
+        """
+        Factory which produces a L{MDPropagator} object initialized with
+        the MD parameters given in __init__().
+
+        @return: L{MDPropagator} instance
+        @rtype: L{MDPropagator}
+        """
+        import numpy as np
+        from csb.statistics.samplers.mc.propagators import MDPropagator
+        return MDPropagator(self._gradient, self._timestep,
+                            mass_matrix=np.ones(2),
+                            integrator=self._integrator)
 
 class AuxiliarySamplerObject(object):
     '''
@@ -122,3 +152,42 @@ class HMCParameterInfo(object):
     def __init__(self, **params):
 
         self.__dict__.update(**params)
+
+
+class FastHMCSampler(ISD2HMCSampler, AuxiliarySamplerObject):
+
+    def sample(self):
+
+        import numpy as np
+        from csb.numeric import exp
+
+        q = self.state.copy() if not 'position' in dir(self.state) else self.state._position.copy()
+        p = np.random.normal(size=q.shape)
+        E_before = -self.pdf.log_prob(q) + 0.5 * np.sum(p ** 2)
+
+        p -= 0.5 * self.timestep * self._gradient(q)
+
+        for i in range(self.nsteps-1):
+            q += p * self.timestep
+            p -= self.timestep * self._gradient(q)
+
+        q += p * self.timestep
+        p -= 0.5 * self.timestep * self._gradient(q)
+
+        E_after = -self.pdf.log_prob(q) + 0.5 * np.sum(p ** 2)
+
+        acc = np.random.uniform() < exp(-(E_after - E_before))
+
+        self._update_statistics(acc)
+        self._last_move_accepted = acc
+
+        if self.counter < self.timestep_adaption_limit:
+            self._adapt_timestep()
+        self.counter += 1
+
+        if acc:
+            self._state = q
+            return q.copy()
+        else:
+            return self._state.copy() if not 'position' in dir(self._state) else self._state.position.copy()
+        
