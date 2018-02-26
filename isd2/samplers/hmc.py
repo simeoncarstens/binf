@@ -98,7 +98,7 @@ class AuxiliarySamplerObject(object):
                               'HMC pseudo-energy': self.energy})    
 
 
-class ISD2HMCSampler(HMCSampler, AuxiliarySamplerObject):
+class ISD2HMCSampler(NoMMHMCSampler, AuxiliarySamplerObject):
     '''
     It would be nice to subclass all ISD2 samplers from isd2.samplers.AbstractISD2SingleChainMC,
     but obviously also ritance,
