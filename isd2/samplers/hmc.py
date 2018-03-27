@@ -154,7 +154,27 @@ class HMCParameterInfo(object):
         self.__dict__.update(**params)
 
 
-class FastHMCSampler(ISD2HMCSampler, AuxiliarySamplerObject):
+class FastHMCSampler(NoMMHMCSampler, AuxiliarySamplerObject):
+
+    def __init__(self, pdf, state, timestep, nsteps, timestep_adaption_limit=0,
+                 adaption_uprate=1.05, adaption_downrate=0.95, variable_name=None):
+
+        from isd2.pdf import AbstractISDPDF
+        
+        wrapped_pdf = pdf if not isinstance(pdf, AbstractISDPDF) else PDFWrapper(pdf)
+        wrapped_state = state if 'position' in dir(state) else State(state)
+        super(FastHMCSampler, self).__init__(wrapped_pdf, wrapped_state, wrapped_pdf.gradient, 
+                                             timestep, nsteps)
+
+        self.timestep_adaption_limit = timestep_adaption_limit
+        self.adaption_uprate = adaption_uprate
+        self.adaption_downrate = adaption_downrate
+
+        self._variable_name = variable_name
+        self.counter = 0
+
+    def variable_name(self):
+        return 'HMC' if self._variable_name is None else self._variable_name
 
     def sample(self):
 
@@ -191,3 +211,14 @@ class FastHMCSampler(ISD2HMCSampler, AuxiliarySamplerObject):
         else:
             return self._state.copy() if not 'position' in dir(self._state) else self._state.position.copy()
         
+    @property
+    def sampling_stats(self):
+
+        from collections import OrderedDict
+
+        return OrderedDict(**{'{} acceptance rate'.format(self.variable_name):
+                                self.acceptance_rate, 
+                              '{} timestep'.format(self.variable_name):
+                                self.timestep, 
+                              '{} pseudo-energy'.format(self.variable_name):
+                                self.energy})

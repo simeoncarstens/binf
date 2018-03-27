@@ -100,10 +100,11 @@ class GibbsSampler(AbstractSingleChainMC):
     def _propose():
         pass
 
-    def get_last_draw_stats(self):
+    @property
+    def last_draw_stats(self):
 
-        return {k: v.get_last_draw_stats()[k] for k, v in self.subsamplers.items() 
-                if 'get_last_draw_stats' in dir(v)}
+        return {k: v.last_draw_stats[k] for k, v in self.subsamplers.items() 
+                if getattr(v, 'last_draw_stats', None) is not None}
 
     @property
     def sampling_stats(self):
