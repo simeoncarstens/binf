@@ -3,7 +3,7 @@ import unittest, numpy
 from isd2.tests.pdf import MockISDPDF
 from isd2.samplers import ISDState
 from isd2.samplers.gibbs import GibbsSampler
-from isd2.samplers.hmc import ISD2HMCSampler
+from isd2.samplers.hmc import HMCSampler
 
 class MockSampler(object):
 
@@ -49,17 +49,17 @@ class testGibbsSampler(unittest.TestCase):
 
         gips = self._create_sampler()
 
-        self.assertTrue(len(gips._conditional_pdfs) == 2)
+        self.assertEqual(len(gips._conditional_pdfs), 2)
         self.assertTrue('x' in gips._conditional_pdfs)
         self.assertTrue('y' in gips._conditional_pdfs)
-        self.assertTrue(gips._conditional_pdfs['x']['y'].value == 3.0)
-        self.assertTrue(gips._conditional_pdfs['y']['x'].value == 2.0)
-        self.assertTrue(len(gips._conditional_pdfs['x'].variables) == 1)
+        self.assertEqual(gips._conditional_pdfs['x']['y'].value, 3.0)
+        self.assertEqual(gips._conditional_pdfs['y']['x'].value, 2.0)
+        self.assertEqual(len(gips._conditional_pdfs['x'].variables), 1)
         self.assertTrue('y' in gips.subsamplers['x'].pdf.parameters)
-        self.assertTrue(gips.subsamplers['x'].pdf['y'].value == 3.0)
-        self.assertTrue(len(gips._conditional_pdfs['y'].variables) == 1)
+        self.assertEqual(gips.subsamplers['x'].pdf['y'].value, 3.0)
+        self.assertEqual(len(gips._conditional_pdfs['y'].variables), 1)
         self.assertTrue('x' in gips.subsamplers['y'].pdf.parameters)
-        self.assertTrue(gips.subsamplers['y'].pdf['x'].value == 2.0)
+        self.assertEqual(gips.subsamplers['y'].pdf['x'].value, 2.0)
 
     def testUpdate_conditional_pdf_params(self):
 
@@ -67,7 +67,7 @@ class testGibbsSampler(unittest.TestCase):
         
         gips.state.update_variables(x=5.0)
         gips._update_conditional_pdf_params()
-        self.assertTrue(gips._conditional_pdfs['y']['x'].value == 5.0)
+        self.assertEqual(gips._conditional_pdfs['y']['x'].value, 5.0)
 
     def testUpdate_samplers(self):
 
@@ -78,20 +78,20 @@ class testGibbsSampler(unittest.TestCase):
         new_sampler.pdf['ParamA'].set(23.0)
         gips.update_samplers(x=new_sampler)
 
-        self.assertTrue(gips.subsamplers['x'].pdf['ParamA'].value == 23.0)
+        self.assertEqual(gips.subsamplers['x'].pdf['ParamA'].value, 23.0)
 
     def testUpdate_subsampler_states(self):
 
-        gips = GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': numpy.array([3.0])}),
+        gips = GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': 3.0}),
                             {'x': MockSampler('x'), 
-                             'y': ISD2HMCSampler(MockISDPDF(), numpy.array([1.0]), 0.1, 12)})
+                             'y': HMCSampler(MockISDPDF(), 1.0, 0.1, 12)})
 
         gips.state.update_variables(x=5.0)
-        gips.state.update_variables(y=numpy.array([2.3]))
+        gips.state.update_variables(y=2.3)
         gips._update_subsampler_states()
 
-        self.assertTrue(gips.subsamplers['x'].state == 5.0)
-        self.assertTrue(gips.subsamplers['y'].state.position == numpy.array([2.3]))
+        self.assertEqual(gips.subsamplers['x'].state, 5.0)
+        self.assertEqual(gips.subsamplers['y'].state, 2.3)
 
     def testUpdate_state(self):
 
@@ -99,7 +99,7 @@ class testGibbsSampler(unittest.TestCase):
         
         gips._update_state(x=34.0)
 
-        self.assertTrue(gips.state.variables['x'] == 34.0)
+        self.assertEqual(gips.state.variables['x'], 34.0)
 
     def testSample(self):
 
@@ -107,16 +107,16 @@ class testGibbsSampler(unittest.TestCase):
         gips._update_state(x=0.5)
         sample = gips.sample()
 
-        self.assertTrue(sample.variables == gips.state.variables)
-        self.assertTrue(sample.variables['x'] == 3.0)
-        self.assertTrue(sample.variables['y'] == 18.0)
+        self.assertEqual(sample.variables, gips.state.variables)
+        self.assertEqual(sample.variables['x'], 3.0)
+        self.assertEqual(sample.variables['y'], 18.0)
 
     def testGet_last_draw_stats(self):
 
         gips = self._create_sampler()
         
         stats = gips.last_draw_stats
-        self.assertTrue(len(stats) == 2)
+        self.assertEqual(len(stats), 2)
         self.assertTrue('x' in stats)
         self.assertTrue('y' in stats)
         self.assertTrue('testlastdrawstats2.0' in stats['x'])
