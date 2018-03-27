@@ -43,7 +43,7 @@ def plot_hists(samples, real_coeffs, real_precision, n_bins, fig):
     precisions = np.array([x.variables['precision'] for x in samples])
 
     for i in range(len(real_coeffs)):
-        coeff_str = chr(65 + i)
+        coeff_str = chr(97 + i)
         ax = fig.add_subplot(321 + i)
         ax.hist(coeffs[:,i], bins=n_bins, normed=True)
         ax.set_xlabel(coeff_str)
