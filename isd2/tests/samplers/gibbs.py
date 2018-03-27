@@ -20,7 +20,8 @@ class MockSampler(object):
     def state(self, value):
         self._state = value
 
-    def get_last_draw_stats(self):
+    @property
+    def last_draw_stats(self):
 
         return {self.variable_name: {'testlastdrawstats{}'.format(self.state): self.state}}
 
@@ -114,7 +115,7 @@ class testGibbsSampler(unittest.TestCase):
 
         gips = self._create_sampler()
         
-        stats = gips.get_last_draw_stats()
+        stats = gips.last_draw_stats
         self.assertTrue(len(stats) == 2)
         self.assertTrue('x' in stats)
         self.assertTrue('y' in stats)
