@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from isd2.samplers import ISDState
 from isd2.example.samplers import make_sampler
 from isd2.example.plots import plot_fit, plot_hists
-from isd2.example.misc import make_posterior
+from isd2.example.plots import plot_prediction_tube
+from isd2.example.misc import get_MAP, make_posterior
     
 n_data_points = 20
 
@@ -48,8 +49,6 @@ plt.show()
 fig = plt.figure()
 ax = fig.add_subplot(111)
 plot_fit(xses, ys, polynomial, xses, log_probs, samples_thin, real_coeffs, real_precision, ax)
-from isd2.example.plots import plot_prediction_tube
-from isd2.example.misc import get_MAP
 MAP_coeffs, _ = get_MAP(samples, log_probs)
 MAP_fit = polynomial(xses, MAP_coeffs)
 plot_prediction_tube(samples_thin, polynomial, xses, 
