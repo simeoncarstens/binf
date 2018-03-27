@@ -32,13 +32,7 @@ class ForwardModel(AbstractForwardModel):
     def clone(self):
 
         copy = self.__class__(self.xses, self.polynomial)
-        
-        for p in self.parameters:
-            if not p in copy.parameters:
-                copy._register(p)
-                copy[p] = self[p].__class__(self[p].value, p)
-                if p in copy.variables:
-                    copy._delete_variable(p)                
+        self._set_parameters(copy)
 
         return copy
 
@@ -53,12 +47,14 @@ class GaussianErrorModel(AbstractErrorModel):
 
         self._register_variable('mock_data')
         self._register_variable('precision')
-        self.update_var_param_types(mock_data=ArrayParameter, precision=ScalarParameter)
+        self.update_var_param_types(mock_data=ArrayParameter,
+                                    precision=ScalarParameter)
         self._set_original_variables()
 
     def _evaluate_log_prob(self, mock_data, precision):
 
-        return -0.5 * np.sum((mock_data - self.ys) ** 2) * precision + len(self.ys) * 0.5 * np.log(precision)
+        logZ = len(self.ys) * 0.5 * np.log(precision)
+        return -0.5 * np.sum((mock_data - self.ys) ** 2) * precision + logZ
 
     def _evaluate_gradient(self, mock_data, precision):
 

@@ -36,3 +36,12 @@ class AbstractForwardModel(AbstractModel):
     def clone(self):
 
         pass
+
+    def _set_parameters(self, copy):
+        
+        for p in self.parameters:
+            if not p in copy.parameters:
+                copy._register(p)
+                copy[p] = self[p].__class__(self[p].value, p)
+                if p in copy.variables:
+                    copy._delete_variable(p)

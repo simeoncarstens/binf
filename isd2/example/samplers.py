@@ -15,9 +15,11 @@ class GammaSampler(object):
 
         from isd2.example.priors import GammaPrior
         
-        prior = filter(lambda p: 'precision' in p.variables, self.pdf.priors.values())[0]
+        prior = filter(lambda p: 'precision' in p.variables,
+                       self.pdf.priors.values())[0]
         if not isinstance(prior, GammaPrior):
-            return NotImplementedError('Prior for precision is not a Gamma distribution')
+            msg = 'Prior for precision is not a Gamma distribution'
+            return NotImplementedError(msg)
         
         return prior
 
@@ -30,8 +32,9 @@ class GammaSampler(object):
         
     def _calculate_rate(self):
 
-        r1 = -self.pdf.likelihoods['points'].log_prob(coefficients=self.pdf['coefficients'].value,
-                                                      precision=1.0)
+        args = dict(coefficients=self.pdf['coefficients'].value,
+                    precision=1.0)
+        r1 = -self.pdf.likelihoods['points'].log_prob(**args)
         r2 = self._get_prior().rate
         
         return r1 + r2
@@ -72,8 +75,9 @@ class RWMCSampler(object):
     def sample(self):
 
         E_old = -self.pdf.log_prob(coefficients=self.state)
-        proposal = self.state + np.random.uniform(low=-self.stepsize, high=self.stepsize,
-                                                  size=len(self.state))
+        change = np.random.uniform(low=-self.stepsize, high=self.stepsize,
+                                   size=len(self.state))
+        proposal = self.state + change
         E_new = -self.pdf.log_prob(coefficients=proposal)
 
         accepted = np.random.random() < np.exp(-(E_new - E_old))
@@ -89,14 +93,18 @@ class RWMCSampler(object):
 def make_sampler(posterior, rwmc_stepsize, start_state):
 
     from isd2.samplers.gibbs import GibbsSampler
-    
-    coefficients_pdf = posterior.conditional_factory(precision=start_state.variables['precision'])
-    coefficients_sampler = RWMCSampler(coefficients_pdf, start_state.variables['coefficients'],
+
+    coeffs = start_state.variables['coefficients']
+    precision = start_state.variables['precision']
+    coefficients_pdf = posterior.conditional_factory(precision=precision)
+    coefficients_sampler = RWMCSampler(coefficients_pdf,
+                                       coeffs,
                                        rwmc_stepsize)
 
-    precision_pdf = posterior.conditional_factory(coefficients=start_state.variables['coefficients'])
-    precision_sampler = GammaSampler(precision_pdf, start_state.variables['precision'])
+    precision_pdf = posterior.conditional_factory(coefficients=coeffs)
+    precision_sampler = GammaSampler(precision_pdf, precision)
 
-    subsamplers = {'coefficients': coefficients_sampler, 'precision': precision_sampler}
+    subsamplers = {'coefficients': coefficients_sampler,
+                   'precision': precision_sampler}
 
     return GibbsSampler(posterior, start_state, subsamplers)
