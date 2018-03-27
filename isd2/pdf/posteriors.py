@@ -114,8 +114,8 @@ class Posterior(AbstractISDPDF):
 
         vars = variables
 
-        res = numpy.zeros(sum([len(variables[v]) for v in variables 
-                               if v in self.differentiable_variables]))
+        res = numpy.zeros(sum([len(variables[v]) if hasattr(variables[v], '__len__') else 1 
+                               for v in variables if v in self.differentiable_variables]))
 
         for n, f in self._components.iteritems():
             if len(f.variables) > 0 and len(f.differentiable_variables) > 0:
