@@ -8,11 +8,11 @@ import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
-from isd2.samplers import ISDState
-from isd2.example.samplers import make_sampler
-from isd2.example.plots import plot_fit, plot_hists
-from isd2.example.plots import plot_prediction_tube
-from isd2.example.misc import get_MAP, make_posterior
+from binf.samplers import ISDState
+from binf.example.samplers import make_sampler
+from binf.example.plots import plot_fit, plot_hists
+from binf.example.plots import plot_prediction_tube
+from binf.example.misc import get_MAP, make_posterior
     
 n_data_points = 20
 
