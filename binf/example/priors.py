@@ -2,10 +2,10 @@ import numpy as np
 
 from csb.statistics.pdf.parameterized import Parameter as ScalarParameter
 
-from isd2 import ArrayParameter
+from binf import ArrayParameter
 
-from isd2.pdf.posteriors import Posterior
-from isd2.pdf.priors import AbstractPrior
+from binf.pdf.posteriors import Posterior
+from binf.pdf.priors import AbstractPrior
 
 class GammaPrior(AbstractPrior):
 

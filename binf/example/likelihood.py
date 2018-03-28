@@ -2,10 +2,10 @@ import numpy as np
 
 from csb.statistics.pdf.parameterized import Parameter as ScalarParameter
 
-from isd2 import ArrayParameter
-from isd2.model.forwardmodels import AbstractForwardModel
-from isd2.model.errormodels import AbstractErrorModel
-from isd2.pdf import ParameterNotFoundError
+from binf import ArrayParameter
+from binf.model.forwardmodels import AbstractForwardModel
+from binf.model.errormodels import AbstractErrorModel
+from binf.pdf import ParameterNotFoundError
 
 
 class ForwardModel(AbstractForwardModel):
@@ -69,8 +69,8 @@ class GaussianErrorModel(AbstractErrorModel):
 
 def make_likelihood(xses, ys, polynomial):
     
-    from isd2.pdf.likelihoods import Likelihood
-    from isd2.example.likelihood import ForwardModel, GaussianErrorModel
+    from binf.pdf.likelihoods import Likelihood
+    from binf.example.likelihood import ForwardModel, GaussianErrorModel
 
     FWM = ForwardModel(xses, polynomial)
     EM = GaussianErrorModel(ys)
