@@ -8,7 +8,7 @@ def predict(x, y, samples, polynomial):
         f = lambda coefficients, precision, x=x, y=y: -0.5 * (polynomial(x, coefficients) - y) ** 2 * precision + 0.5 * np.log(precision) - 0.5 * np.log(2.0 * np.pi)
         integrands = np.array([f(**x.variables) for x in samples])
     else:
-        from isd2.example.likelihood import make_likelihood
+        from binf.example.likelihood import make_likelihood
         
         Lnew = make_likelihood(np.array([x]), np.array([y]), polynomial)
         integrands = np.array([Lnew.log_prob(**x.variables) for x in samples])
@@ -23,9 +23,9 @@ def get_MAP(samples, log_probs):
 
 def make_posterior(xses, ys, polynomial):
 
-    from isd2.pdf.posteriors import Posterior
-    from isd2.example.likelihood import make_likelihood
-    from isd2.example.priors import make_priors
+    from binf.pdf.posteriors import Posterior
+    from binf.example.likelihood import make_likelihood
+    from binf.example.priors import make_priors
     
     L = make_likelihood(xses, ys, polynomial)
     priors = make_priors()

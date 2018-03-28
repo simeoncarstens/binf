@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
     
 def plot_prediction_tube(samples, polynomial, predict_space, ys_from, ys_to, n_ys, ax):
 
-    from isd2.example.misc import predict
+    from binf.example.misc import predict
     
     predicted_ys = np.array([np.linspace(ys_from[i], ys_to[i], n_ys)
                              for i, _ in enumerate(predict_space)])
@@ -26,7 +26,7 @@ def plot_prediction_tube(samples, polynomial, predict_space, ys_from, ys_to, n_y
 def plot_fit(xses, ys, polynomial, predict_space, log_probs, samples, 
              real_coeffs, real_precision, ax):
 
-    from isd2.example.misc import get_MAP
+    from binf.example.misc import get_MAP
     
     MAP_coeffs, MAP_precision = get_MAP(samples, log_probs)
 

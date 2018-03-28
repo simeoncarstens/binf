@@ -13,7 +13,7 @@ class GammaSampler(object):
 
     def _get_prior(self):
 
-        from isd2.example.priors import GammaPrior
+        from binf.example.priors import GammaPrior
         
         prior = filter(lambda p: 'precision' in p.variables,
                        self.pdf.priors.values())[0]
@@ -92,7 +92,7 @@ class RWMCSampler(object):
 
 def make_sampler(posterior, rwmc_stepsize, start_state):
 
-    from isd2.samplers.gibbs import GibbsSampler
+    from binf.samplers.gibbs import GibbsSampler
 
     coeffs = start_state.variables['coefficients']
     precision = start_state.variables['precision']
