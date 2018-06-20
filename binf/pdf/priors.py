@@ -1,6 +1,5 @@
 """
-This module contains all prior distributions occuring in ISD.
-All these priors are ultimately derived from isd2.pdf.AbstractISDPDF
+This module contains interfaces for prior distributions
 """
 
 from abc import abstractmethod
