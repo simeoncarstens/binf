@@ -1,5 +1,5 @@
 """
-This module contains all forward models.
+This module contains interfaces for forward models.
 """
 
 from abc import abstractmethod, ABCMeta

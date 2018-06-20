@@ -1,6 +1,5 @@
 """
-This module contains samplers used in ISD.
-We should try to reuse the samplers in CSB.
+This module contains implementations of various MCMC samplers
 """
 
 from csb.statistics.samplers import State
@@ -10,7 +9,13 @@ from csb.statistics.samplers.mc.singlechain import AbstractSingleChainMC
 class ISDState(object):
 
     def __init__(self, variables={}, momenta={}):
+        """
+        Supposed to represent a state in a Markov chain, containing
+        named and typed variables, which hold model parameter values.
 
+        :param variables: named and typed variables and values
+        :type variables: dict
+        """
         self._variables = {}
         self._momenta = {}
         
@@ -19,37 +24,34 @@ class ISDState(object):
 
     @property
     def variables(self):
+        """
+        Returns a copy (!) of the variables and their values
+        held by this state
+
+        :returns: copy of variables
+        :rtype: dict
+        """
         return self._variables.copy()
 
     def update_variables(self, **variables):
+        r"""
+        Updates variables
+
+        :param \**variables: named and typed variables to update
+                             this state with
+        :type \**variables: dict
+        """
         self._variables.update(variables)
         
     @property
     def momenta(self):
+        """
+        I currently don't use this
+        """
         return self._momenta.copy()
     
     def update_momenta(self, **momenta):
+        """
+        I currently don't use this
+        """
         self._momenta.update(momenta)
-    
-
-
-class AbstractISD2SingleChainMC(AbstractSingleChainMC):
-
-    def __init__(self, pdf, state, temperature=1.0):
-
-        super(AbstractISD2SingleChainMC, self).__init__(pdf,
-                                                        State(state.position),
-                                                        temperature)
-        
-    @AbstractSingleChainMC.state.setter
-    def state(self, value):
-        if not isinstance(value, State):
-            value = State(value)
-            
-        self._state = value
-
-    def sample(self):
-
-        res = super(AbstractISD2SingleChainMC, self).sample()
-
-        return res.position

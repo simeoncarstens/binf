@@ -1,5 +1,5 @@
 """
-This module contains all error models occuring in ISD.
+This module contains interfaces for error models
 """
 
 import numpy

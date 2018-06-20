@@ -1,5 +1,5 @@
 """
-This module should provide general functionality and classes
+This module provides general functionality and classes
 related to probability density functions and their parameters.
 """
 
