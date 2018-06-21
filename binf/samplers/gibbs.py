@@ -74,7 +74,7 @@ class GibbsSampler(AbstractSingleChainMC):
         Returns the PDF object this sampler samples from
 
         :returns: PDF object
-        :rtype: :class:`.AbstractPDF`
+        :rtype: :class:`.AbstractISDPDF`
         """
         return self._pdf
     @pdf.setter
