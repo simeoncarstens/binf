@@ -47,7 +47,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
-    'autoapi.extension',
     'sphinx_epytext',
 ]
 
@@ -178,7 +177,3 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 todo_include_todos = True
 
 autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'inherited-members', 'show-inheritance']
-
-# Document Python Code
-autoapi_type = 'python'
-autoapi_dirs = ['../binf/']
