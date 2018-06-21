@@ -47,7 +47,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         raise NotImplementedError
 
     def conditional_factory(self, **fixed_vars):
-        """
+        r"""
         Makes a copy of this object in which one or several variables
         are set to specific values (on which the new PDF is 'conditioned'
         on)
@@ -61,7 +61,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
                              on
         
         :returns: PDF object conditioned on the given values
-        :rtype: :class:`.AbstractISDPDF
+        :rtype: :class:`.AbstractISDPDF`
         """
 
         result = self.clone()
