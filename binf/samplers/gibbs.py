@@ -151,9 +151,15 @@ class GibbsSampler(AbstractSingleChainMC):
         return self._state
 
     def _calc_pacc():
+        """
+        Not applicable
+        """
         pass
 
     def _propose():
+        """
+        Not applicable
+        """
         pass
 
     @property

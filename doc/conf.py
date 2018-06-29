@@ -55,8 +55,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -176,3 +175,9 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 todo_include_todos = True
 
 autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'inherited-members', 'show-inheritance']
+
+# Render these files as indicated
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser'
+}
+
