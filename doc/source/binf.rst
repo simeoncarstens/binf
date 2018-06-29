@@ -1,18 +1,20 @@
-binf.tests package
-==================
+binf package
+============
 
 Subpackages
 -----------
 
 .. toctree::
 
-    binf.tests.pdf
-    binf.tests.samplers
+    binf.example
+    binf.model
+    binf.pdf
+    binf.samplers
 
 Module contents
 ---------------
 
-.. automodule:: binf.tests
+.. automodule:: binf
     :members:
     :undoc-members:
     :show-inheritance:
