@@ -8,11 +8,11 @@ import numpy
 
 from csb.numeric import log, exp
 
-from isd2 import AbstractISDNamedCallable
-from isd2.pdf import AbstractISDPDF
+from binf import AbstractBinfNamedCallable
+from binf.pdf import AbstractBinfPDF
 
 
-class Posterior(AbstractISDPDF):
+class Posterior(AbstractBinfPDF):
 
     def __init__(self, likelihoods, priors, name='the one and only posterior'):
         """

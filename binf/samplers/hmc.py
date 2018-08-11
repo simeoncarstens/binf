@@ -21,10 +21,10 @@ class HMCSampler(object):
 
         :param pdf: object representing the PDF this sampler is
                     supposed to sample from
-        :type pdf: :class:`.AbstractISDPDF`
+        :type pdf: :class:`.AbstractBinfPDF`
 
         :param state: initial state
-        :type state: :class:`.ISDState`
+        :type state: :class:`.BinfState`
 
         :param timestep: integration step size for leap frog integrator
         :type timestep: float

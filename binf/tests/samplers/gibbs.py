@@ -1,7 +1,7 @@
 import unittest, numpy
 
-from binf.tests.pdf import MockISDPDF
-from binf.samplers import ISDState
+from binf.tests.pdf import MockBinfPDF
+from binf.samplers import BinfState
 from binf.samplers.gibbs import GibbsSampler
 from binf.samplers.hmc import HMCSampler
 
@@ -42,7 +42,7 @@ class testGibbsSampler(unittest.TestCase):
 
     def _create_sampler(self):
 
-        return GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': 3.0}),
+        return GibbsSampler(MockBinfPDF(), BinfState({'x': 2.0, 'y': 3.0}),
                             {'x': MockSampler('x'), 'y': MockSampler('y')})
 
     def testSetup_conditional_pdfs(self):
@@ -74,7 +74,7 @@ class testGibbsSampler(unittest.TestCase):
         gips = self._create_sampler()
         
         new_sampler = MockSampler('x')
-        new_sampler.pdf = MockISDPDF()
+        new_sampler.pdf = MockBinfPDF()
         new_sampler.pdf['ParamA'].set(23.0)
         gips.update_samplers(x=new_sampler)
 
@@ -82,9 +82,9 @@ class testGibbsSampler(unittest.TestCase):
 
     def testUpdate_subsampler_states(self):
 
-        gips = GibbsSampler(MockISDPDF(), ISDState({'x': 2.0, 'y': 3.0}),
+        gips = GibbsSampler(MockBinfPDF(), BinfState({'x': 2.0, 'y': 3.0}),
                             {'x': MockSampler('x'), 
-                             'y': HMCSampler(MockISDPDF(), 1.0, 0.1, 12)})
+                             'y': HMCSampler(MockBinfPDF(), 1.0, 0.1, 12)})
 
         gips.state.update_variables(x=5.0)
         gips.state.update_variables(y=2.3)

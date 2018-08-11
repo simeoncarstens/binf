@@ -8,7 +8,7 @@ import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
-from binf.samplers import ISDState
+from binf.samplers import BinfState
 from binf.example.samplers import make_sampler
 from binf.example.plots import plot_fit, plot_hists
 from binf.example.plots import plot_prediction_tube
@@ -23,7 +23,7 @@ xses = np.linspace(-2, 2, n_data_points)
 ys = np.random.normal(loc=polynomial(xses, real_coeffs), 
                       scale=1.0 / np.sqrt(real_precision))
 
-start = ISDState(dict(coefficients=np.ones(4), precision=1.0))
+start = BinfState(dict(coefficients=np.ones(4), precision=1.0))
 
 posterior = make_posterior(xses, ys, polynomial)
 

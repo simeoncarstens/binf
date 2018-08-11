@@ -6,7 +6,7 @@ from csb.statistics.pdf import AbstractDensity, ParameterNotFoundError
 from csb.statistics.pdf.parameterized import Parameter, ParameterValueError
 from csb.core import typedproperty, iterable
 
-from isd2.pdf.parameters import FancyGaussian
+from binf.pdf.parameters import FancyGaussian
 
 import numpy as np
 import numpy

@@ -6,10 +6,10 @@ import numpy
 
 from csb.numeric import exp
 
-from isd2.pdf import AbstractISDPDF
+from binf.pdf import AbstractBinfPDF
 
 
-class Likelihood(AbstractISDPDF):
+class Likelihood(AbstractBinfPDF):
 
     def __init__(self, name, forward_model, error_model):
         """

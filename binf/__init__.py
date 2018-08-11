@@ -1,6 +1,6 @@
 """
-Future ISD stuff goes here. Currently, the major focus is to redesign the
-Universe and access to atoms, molecules etc. Also Posterior and ISDSampler
+Future Binf stuff goes here. Currently, the major focus is to redesign the
+Universe and access to atoms, molecules etc. Also Posterior and BinfSampler
 will be redesigned at some point.
 """
 __version__ = '2.0.0'
@@ -13,7 +13,7 @@ import numpy as np, sys
 from csb.statistics.pdf.parameterized import AbstractParameter
 
 
-class AbstractISDNamedCallable(object):
+class AbstractBinfNamedCallable(object):
 
     __metaclass__ = ABCMeta
 
