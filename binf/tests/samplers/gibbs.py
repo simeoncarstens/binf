@@ -1,9 +1,9 @@
 import unittest, numpy
 
-from isd2.tests.pdf import MockISDPDF
-from isd2.samplers import ISDState
-from isd2.samplers.gibbs import GibbsSampler
-from isd2.samplers.hmc import HMCSampler
+from binf.tests.pdf import MockISDPDF
+from binf.samplers import ISDState
+from binf.samplers.gibbs import GibbsSampler
+from binf.samplers.hmc import HMCSampler
 
 class MockSampler(object):
 
