@@ -27,8 +27,16 @@ class HMCSampler(object):
         self._variable_name = variable_name
 
         self._last_move_accepted = 0
+        self.n_accepted = 0
         self.counter = 0
 
+    @property
+    def acceptance_rate(self):
+        if self.counter > 0:
+            return self.n_accepted / float(self.counter)
+        else:
+            return 0.0
+        
     @property
     def variable_name(self):
         return 'HMC' if self._variable_name is None else self._variable_name
@@ -76,6 +84,7 @@ class HMCSampler(object):
 
         if acc:
             self._state = q
+            self.n_accepted += 1
             return self._copy_state(q)
         else:
             return self._copy_state(self.state)
