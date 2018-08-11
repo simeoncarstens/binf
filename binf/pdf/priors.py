@@ -4,9 +4,9 @@ This module contains interfaces for prior distributions
 
 from abc import abstractmethod
 
-from isd2.pdf import AbstractISDPDF
+from binf.pdf import AbstractBinfPDF
 
 
-class AbstractPrior(AbstractISDPDF):
+class AbstractPrior(AbstractBinfPDF):
 
     pass

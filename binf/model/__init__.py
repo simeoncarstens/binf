@@ -1,18 +1,16 @@
 """
-This module contains all "models" occuring in ISD, like the forward models
+This module contains all "models" occuring in Binf, like the forward models
 and the error models.
-I'm not quite sure yet whether this module makes any sense. In the ISD2 wiki,
-Michael says that "Both should have as many as possible commonalities 
-(currently there are differences, one has a name, the other not)."
 """
 
 from abc import abstractmethod
 
 from csb.core import OrderedDict
 
-from isd2.pdf import ParameterNotFoundError, AbstractISDNamedCallable
+from binf.pdf import ParameterNotFoundError, AbstractBinfNamedCallable
 
-class AbstractModel(AbstractISDNamedCallable):
+
+class AbstractModel(AbstractBinfNamedCallable):
     """
     Some copy & pasting from csb.statistics.pdf.AbstractDensity
     involved.
@@ -80,7 +78,7 @@ class AbstractModel(AbstractISDNamedCallable):
     def _complete_variables(self, variables):
         '''
         _complete_variables and _reduce_variables so far only work for classes
-        which both inherit from AbstractISDNamedCallable and can hold parameters
+        which both inherit from AbstractBinfNamedCallable and can hold parameters
         (that is, PDFs and models)
         '''
 

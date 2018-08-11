@@ -16,10 +16,10 @@ class GibbsSampler(AbstractSingleChainMC):
 
         :param pdf: PDF object representing the pdf this sampler
                     is supposed to sample from
-        :type pdf: :class:`.AbstractISDPDF`
+        :type pdf: :class:`.AbstractBinfPDF`
 
         :param state: initial state
-        :type state: :class:`.ISDState`
+        :type state: :class:`.BinfState`
 
         :param subsamplers: subsamplers for each variable of the
                             PDF object
@@ -74,7 +74,7 @@ class GibbsSampler(AbstractSingleChainMC):
         Returns the PDF object this sampler samples from
 
         :returns: PDF object
-        :rtype: :class:`.AbstractISDPDF`
+        :rtype: :class:`.AbstractBinfPDF`
         """
         return self._pdf
     @pdf.setter
@@ -92,7 +92,7 @@ class GibbsSampler(AbstractSingleChainMC):
         Returns the current state of this sampler
 
         :returns: current state
-        :rtype: :class:`.ISDState`
+        :rtype: :class:`.BinfState`
         """
         return self._state
 
@@ -138,7 +138,7 @@ class GibbsSampler(AbstractSingleChainMC):
         Performs one iteration of the Gibbs sampling scheme
 
         :returns: a state
-        :rtype: :class:`.ISDState`
+        :rtype: :class:`.BinfState`
         """
         ## needed for RE
         self._update_subsampler_states()

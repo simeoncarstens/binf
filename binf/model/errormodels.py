@@ -6,13 +6,13 @@ import numpy
 
 from abc import ABCMeta, abstractmethod
 
-from isd2.model import AbstractModel
-from isd2.pdf import ParameterNotFoundError, AbstractISDPDF
+from binf.model import AbstractModel
+from binf.pdf import ParameterNotFoundError, AbstractBinfPDF
 
 from csb.numeric import log, exp
 
 
-class AbstractErrorModel(AbstractISDPDF):
+class AbstractErrorModel(AbstractBinfPDF):
 
     __metaclass__ = ABCMeta
     

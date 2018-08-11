@@ -6,7 +6,7 @@ from csb.statistics.samplers import State
 from csb.statistics.samplers.mc.singlechain import AbstractSingleChainMC
 
 
-class ISDState(object):
+class BinfState(object):
 
     def __init__(self, variables={}, momenta={}):
         """

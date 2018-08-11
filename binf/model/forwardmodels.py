@@ -4,7 +4,7 @@ This module contains interfaces for forward models.
 
 from abc import abstractmethod, ABCMeta
 
-from isd2.model import AbstractModel
+from binf.model import AbstractModel
 
 
 class AbstractForwardModel(AbstractModel):
@@ -37,6 +37,25 @@ class AbstractForwardModel(AbstractModel):
 
         pass
 
+    def fix_variables(self, **fixed_vars):
+        """
+        Sets ('fixes') specific variables to values given as keyword
+        arguments by removing these variables from the list of registered
+        variables and registering corresponding parameters to this object.
+        """
+        for v in fixed_vars:
+            if v in self.variables:
+                self._delete_variable(v)
+                self._register(v)
+                if v in self.var_param_types:
+                    self[v] = self.var_param_types[v](fixed_vars[v], v)
+                else:
+                    msg = 'Parameter type for variable "{}" not defined'.format(v)
+                    raise ValueError(msg)
+            else:
+                msg = '{} is not a variable of {}'.format(self.__repr__(), v)
+                raise ValueError(msg)
+    
     def _set_parameters(self, copy):
         
         for p in self.parameters:

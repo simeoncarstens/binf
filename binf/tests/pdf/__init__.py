@@ -5,7 +5,7 @@ import unittest
 
 from csb.statistics.pdf.parameterized import Parameter
 
-from binf.pdf import AbstractISDPDF
+from binf.pdf import AbstractBinfPDF
 
 
 class MockParameter(Parameter):
@@ -13,11 +13,11 @@ class MockParameter(Parameter):
     pass
 
 
-class MockISDPDF(AbstractISDPDF):
+class MockBinfPDF(AbstractBinfPDF):
 
-    def __init__(self, name='MockISDPDF'):
+    def __init__(self, name='MockBinfPDF'):
 
-        super(MockISDPDF, self).__init__(name=name)
+        super(MockBinfPDF, self).__init__(name=name)
 
         self._register('ParamA')
         self['ParamA'] = Parameter(2.0, 'ParamA')
@@ -41,11 +41,11 @@ class MockISDPDF(AbstractISDPDF):
         return copy
 
 
-class testAbstractISDPDF(unittest.TestCase):
+class testAbstractBinfPDF(unittest.TestCase):
 
     def setUp(self):
 
-        self._mockpdf = MockISDPDF()
+        self._mockpdf = MockBinfPDF()
 
     def testFix_variables(self):
 
@@ -74,8 +74,8 @@ class testAbstractISDPDF(unittest.TestCase):
 
     def testSet_fixed_variables_from_pdf(self):
 
-        pdf1 = MockISDPDF()
-        pdf2 = MockISDPDF()
+        pdf1 = MockBinfPDF()
+        pdf2 = MockBinfPDF()
 
         pdf1.fix_variables(y=2.0)
         pdf2.set_fixed_variables_from_pdf(pdf1)
@@ -84,18 +84,18 @@ class testAbstractISDPDF(unittest.TestCase):
 
     def testLog_prob(self):
 
-        pdf = MockISDPDF()
+        pdf = MockBinfPDF()
         self.assertTrue(pdf.log_prob(x=3, y=2) == -13.0)
 
     def testUpdate_var_param_types(self):
 
-        pdf = MockISDPDF()
+        pdf = MockBinfPDF()
         pdf.update_var_param_types(x=MockParameter)
         self.assertTrue(pdf.var_param_types['x'] == MockParameter)
 
     def testComplete_variables(self):
 
-        pdf = MockISDPDF()
+        pdf = MockBinfPDF()
         pdf.fix_variables(x=7.0)
         variables = {'y': 2.34}
         pdf._complete_variables(variables)

@@ -5,7 +5,7 @@ related to probability density functions and their parameters.
 
 from abc import ABCMeta, abstractmethod
 
-from isd2 import AbstractISDNamedCallable
+from binf import AbstractBinfNamedCallable
 
 from csb.numeric import exp
 from csb.statistics.pdf.parameterized import ParameterizedDensity
@@ -16,7 +16,7 @@ class ParameterNotFoundError(AttributeError):
     pass
 
 
-class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
+class AbstractBinfPDF(ParameterizedDensity, AbstractBinfNamedCallable):
 
     __metaclass__ = ABCMeta
 
@@ -32,7 +32,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         :param \**args: arguments required for instantiation
         """
         ParameterizedDensity.__init__(self)
-        AbstractISDNamedCallable.__init__(self, name)
+        AbstractBinfNamedCallable.__init__(self, name)
 
         self._var_param_types = {}
 
@@ -61,7 +61,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
                              on
         
         :returns: PDF object conditioned on the given values
-        :rtype: :class:`.AbstractISDPDF`
+        :rtype: :class:`.AbstractBinfPDF`
         """
 
         result = self.clone()
@@ -135,7 +135,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         Returns an exact copy (same parameters / variables...) of this object
 
         :returns: a copy of this object
-        :rtype: :class:`.AbstractISDPDF`
+        :rtype: :class:`.AbstractBinfPDF`
         """
         pass
 
@@ -145,7 +145,7 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
         variables in this object accordingly
 
         :param pdf: PDF object to retrieve variables to fix from
-        :type pdf: :class:`.AbstractISDPDF`        
+        :type pdf: :class:`.AbstractBinfPDF`        
         """
         variables = {p: pdf[p].value for p in pdf.parameters if not p in self.parameters}
         self.fix_variables(**self._get_variables_intersection(variables))
@@ -153,19 +153,19 @@ class AbstractISDPDF(ParameterizedDensity, AbstractISDNamedCallable):
     def _complete_variables(self, variables):
         '''
         _complete_variables and _reduce_variables so far only work for classes
-        which both inherit from AbstractISDNamedCallable and can hold parameters
+        which both inherit from AbstractBinfNamedCallable and can hold parameters
         (that is, PDFs and models)
         '''
 
         variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
 
 
-class TestHO(AbstractISDPDF):
+class TestHO(AbstractBinfPDF):
 
     def __init__(self, k=1.0, x0=0.0, name='TestHO'):
 
         from csb.statistics.pdf.parameterized import Parameter
-        from hicisd2.hicisd2lib import ArrayParameter
+        from hicbinf.hicbinflib import ArrayParameter
         
         super(TestHO, self).__init__(name=name)
 
