@@ -5,7 +5,7 @@ import unittest
 
 from csb.statistics.pdf.parameterized import Parameter
 
-from isd2.pdf import AbstractISDPDF
+from binf.pdf import AbstractISDPDF
 
 
 class MockParameter(Parameter):

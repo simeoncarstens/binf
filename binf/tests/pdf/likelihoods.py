@@ -2,10 +2,10 @@ import unittest, numpy
 
 from csb.statistics.pdf.parameterized import Parameter
 
-from isd2 import ArrayParameter
-from isd2.pdf.likelihoods import Likelihood
-from isd2.model.errormodels import AbstractErrorModel
-from isd2.model.forwardmodels import AbstractForwardModel
+from binf import ArrayParameter
+from binf.pdf.likelihoods import Likelihood
+from binf.model.errormodels import AbstractErrorModel
+from binf.model.forwardmodels import AbstractForwardModel
 
 class MockErrorModel(AbstractErrorModel):
 
