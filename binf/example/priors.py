@@ -68,5 +68,6 @@ def make_priors():
     
     PP = GammaPrior(1.0, 0.2)
     CP = GaussianPrior(means=np.array([2.0, -1.0, 1.0, 0.5]), variances=np.ones(4) * 5)
+    CP = GaussianPrior(means=np.array([0.0, 0.0, 0.0, 0.0]), variances=np.ones(4) * 5)
 
     return {PP.name: PP, CP.name: CP}
