@@ -158,8 +158,7 @@ class Likelihood(AbstractBinfPDF):
 
         copy = self.__class__(self.name,
                               self.forward_model.clone(),
-                              self.error_model.clone(),
-                              self.data)
+                              self.error_model.clone())
         
         return copy
 
