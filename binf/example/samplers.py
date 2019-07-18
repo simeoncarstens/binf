@@ -17,9 +17,10 @@ class GammaSampler(object):
         
         prior = filter(lambda p: 'precision' in p.variables,
                        self.pdf.priors.values())[0]
+        print prior
         if not isinstance(prior, GammaPrior):
             msg = 'Prior for precision is not a Gamma distribution'
-            return NotImplementedError(msg)
+            raise NotImplementedError(msg)
         
         return prior
 
