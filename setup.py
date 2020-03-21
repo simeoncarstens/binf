@@ -22,7 +22,8 @@ URL             = "http://www.simeon-carstens.de"
 SUMMARY         = "Some classes faciliating Bayesian inference tasks occuring in Binf"
 DESCRIPTION     = __doc__
 LICENSE         = 'MIT'
-REQUIRES        = ['numpy', 'csb']
+with open('requirements.txt') as f:
+    REQUIRES = f.read().splitlines()
 
 setup(
     name=NAME,
