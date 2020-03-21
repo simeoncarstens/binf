@@ -33,8 +33,8 @@ samples = []
 for i in range(30000):
     samples.append(deepcopy(gips.sample()))
     if i % 500 == 0 and i > 0:
-        print "#### Gibbs sampling step {} ####".format(i) 
-        print 'RWMC acceptance rate: {}'.format(gips.last_draw_stats['coefficients'].acceptance_rate)
+        print("#### Gibbs sampling step {} ####".format(i)) 
+        print('RWMC acceptance rate: {}'.format(gips.last_draw_stats['coefficients'].acceptance_rate))
 
 
 

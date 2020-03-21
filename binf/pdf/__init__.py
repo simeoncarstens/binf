@@ -16,9 +16,7 @@ class ParameterNotFoundError(AttributeError):
     pass
 
 
-class AbstractBinfPDF(ParameterizedDensity, AbstractBinfNamedCallable):
-
-    __metaclass__ = ABCMeta
+class AbstractBinfPDF(ParameterizedDensity, AbstractBinfNamedCallable, metaclass=ABCMeta):
 
     def __init__(self, name='', **args):
         r"""

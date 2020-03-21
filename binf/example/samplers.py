@@ -16,8 +16,8 @@ class GammaSampler(object):
         from binf.example.priors import GammaPrior
         
         prior = filter(lambda p: 'precision' in p.variables,
-                       self.pdf.priors.values())[0]
-        print prior
+                       list(self.pdf.priors.values()))[0]
+        print(prior)
         if not isinstance(prior, GammaPrior):
             msg = 'Prior for precision is not a Gamma distribution'
             raise NotImplementedError(msg)

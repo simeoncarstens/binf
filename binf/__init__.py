@@ -13,9 +13,7 @@ import numpy as np, sys
 from csb.statistics.pdf.parameterized import AbstractParameter
 
 
-class AbstractBinfNamedCallable(object):
-
-    __metaclass__ = ABCMeta
+class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
 
     def __init__(self, name):
         """
@@ -138,9 +136,9 @@ class AbstractBinfNamedCallable(object):
         Checks whether this object can be differentiated w.r.t. specific
         variables 
         """
-        if len(variables.viewkeys() & set(self._differentiable_variables)) == 0:
+        if len(variables.keys() & set(self._differentiable_variables)) == 0:
             msg = 'Function cannot be differentiated w.r.t.' + \
-                  'any of the variables '+variables.keys()
+                  'any of the variables '+list(variables.keys())
             raise ValueError(msg)
 
     def _evaluate_gradient(self, **variables):
@@ -191,7 +189,7 @@ class AbstractBinfNamedCallable(object):
         Returns the intersection of the variables stored in the argument
         with the set of currently registered variables
         """
-        return {k: v for k, v in test_variables.items() if k in self.variables}
+        return {k: v for k, v in list(test_variables.items()) if k in self.variables}
 
     @property
     def var_param_types(self):

@@ -41,7 +41,7 @@ class GibbsSampler(AbstractSingleChainMC):
         """
         Sets up the conditional PDFs from the full PDF 
         """
-        for var in self.state.variables.keys():
+        for var in list(self.state.variables.keys()):
             fixed_vars = {x: self.state.variables[x]
                           for x in self.state.variables if not x == var}
             fixed_vars.update(**{x: self._pdf[x].value
@@ -56,9 +56,9 @@ class GibbsSampler(AbstractSingleChainMC):
         Updates parameters of the conditional PDFs to values set
         in this object's PDF
         """
-        for pdf in self._conditional_pdfs.values():
+        for pdf in list(self._conditional_pdfs.values()):
             for param in pdf.parameters:
-                if param in self._state.variables.keys():
+                if param in list(self._state.variables.keys()):
                     pdf[param].set(self._state.variables[param])
         
     def _checkstate(self, state):
@@ -128,7 +128,7 @@ class GibbsSampler(AbstractSingleChainMC):
         """
         Updates this object's state's variables to new values
         """
-        for variable, new_value in variables.items():
+        for variable, new_value in list(variables.items()):
             if type(new_value) == State:
                 new_value = new_value.position
             self._state.update_variables(**{variable: new_value})
@@ -170,7 +170,7 @@ class GibbsSampler(AbstractSingleChainMC):
         :returns: information about most recent move for each subsampler
         :rtype: dict
         """
-        return {k: v.last_draw_stats[k] for k, v in self.subsamplers.items() 
+        return {k: v.last_draw_stats[k] for k, v in list(self.subsamplers.items()) 
                 if getattr(v, 'last_draw_stats', None) is not None}
 
     @property
@@ -184,8 +184,8 @@ class GibbsSampler(AbstractSingleChainMC):
         """
         from collections import OrderedDict
 
-        ss = [s for s in self.subsamplers.values() if 'sampling_stats' in dir(s)]
+        ss = [s for s in list(self.subsamplers.values()) if 'sampling_stats' in dir(s)]
 
         return OrderedDict(**{key: value for sampler in ss 
-                              for key, value in sampler.sampling_stats.items()})
+                              for key, value in list(sampler.sampling_stats.items())})
     

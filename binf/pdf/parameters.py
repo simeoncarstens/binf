@@ -102,18 +102,18 @@ class FancyGaussian(ParameterizedDensity):
 if __name__ == "__main__":
 
     pdf = FancyGaussian(1, 2)
-    print pdf.mu, pdf.sigma, pdf.precision
+    print(pdf.mu, pdf.sigma, pdf.precision)
         
     pdf = FancyGaussian(2, 5)
-    print pdf.mu, pdf.sigma, pdf.precision
+    print(pdf.mu, pdf.sigma, pdf.precision)
     
     pdf['precision'].set(2)
-    print pdf.mu, pdf.sigma, pdf.precision
+    print(pdf.mu, pdf.sigma, pdf.precision)
     
     try:
         pdf['sigma'].set(2)
     except InvalidOperationError as ex:
-        print str(ex)
+        print(str(ex))
         
         
         

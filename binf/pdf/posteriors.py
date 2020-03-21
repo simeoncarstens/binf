@@ -46,7 +46,7 @@ class Posterior(AbstractBinfPDF):
         Sets up ('inherits') parameters from likelihoods and priors
         """
         for comps in (self.likelihoods, self.priors):
-            for comp in comps.values():
+            for comp in list(comps.values()):
                 for p in comp.parameters:
                     if p not in self.parameters:
                         self._register(p)
@@ -120,7 +120,7 @@ class Posterior(AbstractBinfPDF):
         :returns: set of variables for each component
         :rtype: dict
         """
-        return {c: c.variables for c in self._components.values()}
+        return {c: c.variables for c in list(self._components.values())}
 
     def _evaluate_components(self, **model_parameters):
         r"""
@@ -179,7 +179,7 @@ class Posterior(AbstractBinfPDF):
                                for v in variables
                                if v in self.differentiable_variables]))
 
-        for n, f in self._components.iteritems():
+        for n, f in self._components.items():
             if len(f.variables) > 0 and len(f.differentiable_variables) > 0:
                 res += f.gradient(**{x: vars[x] for x in vars 
                                      if x in f.variables})

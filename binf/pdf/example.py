@@ -116,7 +116,7 @@ if __name__ == '__main__':
     L._register('mock')
     L.set_params(mock=model)
 
-    print L.log_prob()
+    print(L.log_prob())
 
     ## Monte Carlo
 

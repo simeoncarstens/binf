@@ -12,7 +12,7 @@ from binf.pdf import ParameterNotFoundError, AbstractBinfPDF
 from csb.numeric import log, exp
 
 
-class AbstractErrorModel(AbstractBinfPDF):
+class AbstractErrorModel(AbstractBinfPDF, metaclass=ABCMeta):
 
-    __metaclass__ = ABCMeta
+    pass
     
