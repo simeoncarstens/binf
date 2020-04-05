@@ -1,4 +1,4 @@
-import unittest, numpy
+import unittest, numpy as np
 
 from csb.statistics.pdf.parameterized import Parameter
 
@@ -11,7 +11,7 @@ class MockErrorModel(AbstractErrorModel):
 
     def __init__(self):
 
-        super(MockErrorModel, self).__init__('StupidErrorModel')
+        super(MockErrorModel, self).__init__('StupidErrorModel', np.array([1]))
 
         self._register('ParamB')
         self['ParamB'] = Parameter(4.0, 'ParamB')
@@ -25,7 +25,7 @@ class MockErrorModel(AbstractErrorModel):
 
     def _evaluate_log_prob(self, mock_data, a):
 
-        return a * numpy.sum(mock_data ** 2)
+        return a * np.sum(mock_data ** 2)
 
     def _evaluate_gradient(self, mock_data, a):
 
@@ -52,11 +52,11 @@ class MockForwardModel(AbstractForwardModel):
 
     def _evaluate(self, X, b):
 
-        return b * numpy.array([1.0, 2.0, 3.0])
+        return b * np.array([1.0, 2.0, 3.0])
 
     def _evaluate_jacobi_matrix(self, X, b):
 
-        return b * numpy.array([[2.0, 1.0, 1.0],
+        return b * np.array([[2.0, 1.0, 1.0],
                                 [1.0, 2.0, 2.0]])
 
     def clone(self):
@@ -100,7 +100,7 @@ class testLikelihood(unittest.TestCase):
 
     def testSplit_variables(self):
 
-        fwm_variables, em_variables = self.L._split_variables({'X': numpy.array([1.0,2.0]), 'a': 5.0, 'b': 2.0})
+        fwm_variables, em_variables = self.L._split_variables({'X': np.array([1.0,2.0]), 'a': 5.0, 'b': 2.0})
         self.assertTrue(len(fwm_variables) == 2)
         self.assertTrue(len(em_variables) == 1)
         self.assertTrue('X' in fwm_variables)
@@ -109,14 +109,14 @@ class testLikelihood(unittest.TestCase):
 
     def testEvaluate_log_prob(self):
 
-        self.assertTrue(self.L.log_prob(X=numpy.array([1.2, 4.2, 54.5]), a=2.0, b=3.0) == 252.0)
+        self.assertTrue(self.L.log_prob(X=np.array([1.2, 4.2, 54.5]), a=2.0, b=3.0) == 252.0)
 
     def testEvaluate_gradient(self):
 
         a = 2.0
         b = 3.0
-        expected = numpy.array([14 * a * b ** 2, 22 * a * b ** 2])
-        self.assertTrue(numpy.all(self.L.gradient(X=numpy.array([1.2, 4.2]), a=a, b=b) == expected))
+        expected = np.array([14 * a * b ** 2, 22 * a * b ** 2])
+        self.assertTrue(np.all(self.L.gradient(X=np.array([1.2, 4.2]), a=a, b=b) == expected))
 
         
 if __name__ == '__main__':

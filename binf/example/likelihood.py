@@ -41,9 +41,7 @@ class GaussianErrorModel(AbstractErrorModel):
 
     def __init__(self, ys):
 
-        super(GaussianErrorModel, self).__init__('error_model')
-
-        self.ys = ys
+        super(GaussianErrorModel, self).__init__('error_model', ys)
 
         self._register_variable('mock_data')
         self._register_variable('precision')
@@ -53,16 +51,16 @@ class GaussianErrorModel(AbstractErrorModel):
 
     def _evaluate_log_prob(self, mock_data, precision):
 
-        logZ = len(self.ys) * 0.5 * np.log(precision)
-        return -0.5 * np.sum((mock_data - self.ys) ** 2) * precision + logZ
+        logZ = len(self.data) * 0.5 * np.log(precision)
+        return -0.5 * np.sum((mock_data - self.data) ** 2) * precision + logZ
 
     def _evaluate_gradient(self, mock_data, precision):
 
-        return (mock_data - self.ys) * precision
+        return (mock_data - self.data) * precision
 
     def clone(self):
 
-        copy = self.__class__(self.ys)
+        copy = self.__class__(self.data)
         copy.set_fixed_variables_from_pdf(self)
 
         return copy

@@ -15,9 +15,8 @@ class GammaSampler(object):
 
         from binf.example.priors import GammaPrior
         
-        prior = filter(lambda p: 'precision' in p.variables,
-                       list(self.pdf.priors.values()))[0]
-        print(prior)
+        prior = [p for p in list(self.pdf.priors.values())
+                 if 'precision' in p.variables][0]
         if not isinstance(prior, GammaPrior):
             msg = 'Prior for precision is not a Gamma distribution'
             raise NotImplementedError(msg)
@@ -27,7 +26,7 @@ class GammaSampler(object):
     def _calculate_shape(self):
 
         prior = self._get_prior()
-        n_data_points = len(self.pdf.likelihoods['points'].error_model.ys)
+        n_data_points = len(self.pdf.likelihoods['points'].error_model.data)
         
         return 0.5 * n_data_points + prior.shape - 1
         

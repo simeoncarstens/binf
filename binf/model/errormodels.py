@@ -14,5 +14,7 @@ from csb.numeric import log, exp
 
 class AbstractErrorModel(AbstractBinfPDF, metaclass=ABCMeta):
 
-    pass
-    
+    def __init__(self, name, data):
+
+        super(AbstractErrorModel, self).__init__(name)
+        self.data = data
