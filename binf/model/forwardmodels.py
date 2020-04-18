@@ -15,6 +15,7 @@ class AbstractForwardModel(AbstractModel):
     def __init__(self, name, parameters=[]):
 
         super(AbstractForwardModel, self).__init__(name, parameters)
+        self._cached_mock_data = None
 
     @property
     def data(self):
@@ -29,6 +30,16 @@ class AbstractForwardModel(AbstractModel):
 
     @abstractmethod
     def _evaluate_jacobi_matrix(self, **model_parameters):
+        """
+        Evaluates the Jacobi matrix of the forward model.
+        This is required a gradient-based sampler, such as HMC,
+        is used.
+        If the forward model is expensive to evaluate, you can
+        cache the mock data in this function by setting self._cached_mock_data.
+        The mock data is required to calculate the gradient of the likelihood
+        and often, when evaluating the Jacobian, you can get the mock data
+        for cheap / free.
+        """
 
         self._check_differentiability(**model_parameters)
 
@@ -36,6 +47,10 @@ class AbstractForwardModel(AbstractModel):
     def clone(self):
 
         pass
+
+    @property
+    def cached_mock_data(self):
+        return self._cached_mock_data
 
     def fix_variables(self, **fixed_vars):
         """

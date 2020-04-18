@@ -148,7 +148,10 @@ class Likelihood(AbstractBinfPDF):
     def _evaluate_gradient(self, **variables):
 
         fwm_variables, em_variables = self._split_variables(variables)
-        mock_data = self.forward_model(**fwm_variables)
+        if self.forward_model.cached_mock_data is not None:
+            mock_data = self.forward_model.cached_mock_data
+        else:
+            mock_data = self.forward_model(**fwm_variables)
         dfm = self.forward_model.jacobi_matrix(**fwm_variables)
         emgrad = self.error_model.gradient(mock_data=mock_data, **em_variables)
 
