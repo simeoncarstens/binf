@@ -2,6 +2,8 @@
 First steps with binf
 =====================
 
+--- check out the ``py3`` branch for a Python 3 version ---
+
 What is binf about?
 -------------------
 binf is a collection of classes I use for Bayesian inference problems: probability distributions (likelihood, posterior, priors) and forward- and error models and a Gibbs- and HMC sampler. I use this code in my research on Bayesian chromatin structure determination (`Carstens et al., PLOS Comput. Biol. 2016 <http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005292>`_). The code has limited functionality (namely, it does what I need it to do), but maybe you'll find it useful. 
