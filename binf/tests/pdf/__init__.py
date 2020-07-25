@@ -22,16 +22,16 @@ class MockBinfPDF(AbstractBinfPDF):
         self._register('ParamA')
         self['ParamA'] = Parameter(2.0, 'ParamA')
 
-        self._register_variable('x')
+        self._register_variable('x', 'some_kind')
         self._register_variable('y')
 
         self.update_var_param_types(x=Parameter, y=Parameter)
 
         self._set_original_variables()
 
-    def _evaluate_log_prob(self, x, y):
+    def _evaluate_log_prob(self, some_kind, y):
 
-        return -0.5 * self['ParamA'].value * (x ** 2 + y ** 2)
+        return -0.5 * self['ParamA'].value * (some_kind ** 2 + y ** 2)
 
     def clone(self):
 
