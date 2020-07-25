@@ -23,8 +23,8 @@ class AbstractForwardModel(AbstractModel):
 
     def jacobi_matrix(self, **variables):
 
-        self._complete_variables(variables)
-        result = self._evaluate_jacobi_matrix(**variables)
+        complete_mapped_vars = self._complete_and_map_variables(**variables)
+        result = self._evaluate_jacobi_matrix(**complete_mapped_vars)
 
         return result
 

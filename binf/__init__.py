@@ -1,10 +1,6 @@
 """
-Future Binf stuff goes here. Currently, the major focus is to redesign the
-Universe and access to atoms, molecules etc. Also Posterior and BinfSampler
-will be redesigned at some point.
+binf top level module. Submodules provide interfaces for posterior components
 """
-__version__ = '2.0.0'
-
 from abc import ABCMeta, abstractmethod
 
 import numpy
@@ -28,6 +24,9 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
         self._differentiable_variables = set()
         self._var_param_types = {}
         self._original_variables = set()
+        # see docstring of register_variables for info what the following
+        # line is about
+        self.variable_names = {}
 
     def _set_original_variables(self):
         """
@@ -35,7 +34,7 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
         """
         self._original_variables.update(self.variables)
 
-    def _register_variable(self, name, differentiable=False):
+    def _register_variable(self, name, kind=None, differentiable=False):
         """
         Registers a variable so that later on it can be fixed or
         checked whether it has been passed to the __call__ method
@@ -43,17 +42,36 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
         :param name: name of the new variable
         :type name: str
 
+        :param kind: the "kind" of the variable. This is a weird concept:
+                     if two instances of this class describe the same type
+                     of function. say, a normal distribution with the precision
+                     as a variable, then you will need to give a different 
+                     variable name to each of the two precisions. But both
+                     variables are of kind "precision". All these hoops are
+                     required so that you can just instantiate two normal
+                     distribution objects with different precision variable
+                     names as arguments, all the while the implementation of
+                     the normal distribution is agnostic of the actual variable
+                     name and only requires the variable kind.
+                     In this case, you would want to choose "precision" as kind,
+                     but, for example, "first_precision" and "second_precision"
+                     as variable names.
+        :type kind: str
+
         :param differentiable: True for variables you might at one point
                                want to take the gradient w.r.t.
                                This is probably deprecated.
         :type differentiable: bool
 
         """
-        if type(name) != str:
-            raise ValueError('Variable name must be a string, not ' + type(name))
+        if type(name) != str or  not (kind is None or type(kind) == str):
+            raise ValueError(('Variable name / kind must be a string, '
+                              'not ' + type(name)))
         elif name in self._variables:
             raise ValueError('Variable name \"' + name + '\" must be unique')
         else:
+            variable_kind = kind or name
+            self.variable_names[variable_kind] = name
             self._variables.add(name)
             if differentiable:
                 self._differentiable_variables.add(name)
@@ -112,8 +130,8 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
             msg = 'Function called with {}' + \
                   'arguments instead of {}!'.format(len(variables),                                                                       len(self.variables))
             raise ValueError(msg)
-        self._complete_variables(variables)
-        result = self._evaluate(**variables)
+        complete_mapped_vars = self._complete_and_map_variables(**variables)
+        result = self._evaluate(**complete_mapped_vars)
 
         return result
 
@@ -171,8 +189,8 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
             msg = 'Function called with {}' + \
                   'arguments instead of {}!'.format(len(variables),                                                                       len(self.variables))
             raise ValueError(msg)            
-        self._complete_variables(variables)
-        result = self._evaluate_gradient(**variables)
+        complete_mapped_vars = self._complete_and_map_variables(**variables)
+        result = self._evaluate_gradient(**complete_mapped_vars)
         
         return result
     
@@ -183,6 +201,18 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
         when calling evaluate() with values for fixed variables
         """
         pass
+
+    def _complete_and_map_variables(self, **variables):
+        """
+        This completes the set of variables with possibly fixed variable
+        values and returns the mapped set of variables, in which the
+        variable names are eliminated.
+        """
+        self._complete_variables(variables)
+        mapped_vars = {kind: variables[name]
+                       for kind, name in self.variable_names.items()}
+
+        return mapped_vars
     
     def _get_variables_intersection(self, test_variables):
         """
@@ -222,15 +252,6 @@ class AbstractBinfNamedCallable(object, metaclass=ABCMeta):
             else:
                 msg = '{} is not a variable of {}'.format(self.__repr__(), v)
                 raise ValueError(msg)
-
-
-    # @abstractmethod
-    # def fix_variables(self, **fixed_vars):
-    #     """
-    #     Sets ('fixes') specific variables to values given as keyword
-    #     arguments
-    #     """
-    #     pass
 
 
 class ArrayParameter(AbstractParameter):

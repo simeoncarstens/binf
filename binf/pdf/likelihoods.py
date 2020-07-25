@@ -60,7 +60,7 @@ class Likelihood(AbstractBinfPDF):
         """
         em = self._error_model
         for v in em._original_variables:
-            if not v == 'mock_data':            
+            if not v == em.variable_names['mock_data']:            
                 if v in em.parameters:
                     self._original_variables.update({v})
                 else:

@@ -45,7 +45,7 @@ def plot_hists(samples, real_coeffs, real_precision, n_bins, fig):
     for i in range(len(real_coeffs)):
         coeff_str = chr(97 + i)
         ax = fig.add_subplot(321 + i)
-        ax.hist(coeffs[:,i], bins=n_bins, normed=True)
+        ax.hist(coeffs[:,i], bins=n_bins, density=True)
         ax.set_xlabel(coeff_str)
         ax.set_yticks(())
         ax.plot((real_coeffs[i], real_coeffs[i]), (0, ax.get_ylim()[-1]),
@@ -53,7 +53,7 @@ def plot_hists(samples, real_coeffs, real_precision, n_bins, fig):
         ax.legend()
 
     ax = fig.add_subplot(321 + i + 1)
-    ax.hist(precisions, bins=30, normed=True)
+    ax.hist(precisions, bins=30, density=True)
     ax.set_xlabel('precision')
     ax.set_yticks(())
     ax.plot((real_precision, real_precision), (0, ax.get_ylim()[-1]),

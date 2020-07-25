@@ -96,15 +96,15 @@ class AbstractBinfPDF(ParameterizedDensity, AbstractBinfNamedCallable, metaclass
         :returns: log-probability
         :rtype: float
         """
-        self._complete_variables(variables)
-        result = self._evaluate_log_prob(**variables)
+        complete_mapped_vars = self._complete_and_map_variables(**variables)
+        result = self._evaluate_log_prob(**complete_mapped_vars)
 
         return result
     
     def gradient(self, **variables):
 
-        self._complete_variables(variables)
-        result = self._evaluate_gradient(**variables)
+        complete_mapped_vars = self._complete_and_map_variables(**variables)
+        result = self._evaluate_gradient(**complete_mapped_vars)
 
         return result
 
@@ -155,7 +155,8 @@ class AbstractBinfPDF(ParameterizedDensity, AbstractBinfNamedCallable, metaclass
         (that is, PDFs and models)
         '''
 
-        variables.update(**{p: self[p].value for p in self.parameters if p in self._original_variables})
+        variables.update(**{p: self[p].value for p in self.parameters
+                            if p in self._original_variables})
 
 
 class TestHO(AbstractBinfPDF):
