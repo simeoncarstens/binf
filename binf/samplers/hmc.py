@@ -157,7 +157,7 @@ class HMCSampler(object):
             self._adapt_timestep()
 
         if acc:
-            self._state = q
+            self.state = q
             self.n_accepted += 1
             return self._copy_state(q)
         else:
